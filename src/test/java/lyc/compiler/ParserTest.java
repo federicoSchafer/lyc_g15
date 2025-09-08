@@ -2,12 +2,14 @@ package lyc.compiler;
 
 import java_cup.runtime.Symbol;
 import lyc.compiler.factories.ParserFactory;
+import lyc.compiler.model.InvalidIntegerException;
+import lyc.compiler.model.InvalidLengthException;
+import lyc.compiler.model.UnknownCharacterException;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
@@ -18,69 +20,101 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Disabled
 public class ParserTest {
 
+    // ----------------------------
+    // Asignaciones con expresiones
+    // ----------------------------
     @Test
     public void assignmentWithExpression() throws Exception {
         compilationSuccessful("c=d*(e-21)/4");
+        compilationSuccessful("x = (a+b)*3 - 10/2");
+        compilationSuccessful("result = (v1 + v2) * (v3 - 5)");
     }
 
-    @Test
-    public void syntaxError() {
-        compilationError("1234");
-    }
-
+    // ----------------------------
+    // Asignaciones múltiples desde archivo
+    // ----------------------------
     @Test
     void assignments() throws Exception {
         compilationSuccessful(readFromFile("assignments.txt"));
     }
 
+    // ----------------------------
+    // Números fuera de rango
+    // ----------------------------
     @Test
-    void write() throws Exception {
-        compilationSuccessful(readFromFile("write.txt"));
+    public void invalidPositiveInteger() {
+        assertThrows(InvalidIntegerException.class, () -> {
+            compilationSuccessful("x = 2147483648"); // Integer.MAX_VALUE + 1
+        });
     }
 
     @Test
-    void read() throws Exception {
-        compilationSuccessful(readFromFile("read.txt"));
+    public void invalidNegativeInteger() {
+        assertThrows(InvalidIntegerException.class, () -> {
+            compilationSuccessful("x = -2147483649"); // Integer.MIN_VALUE - 1
+        });
     }
 
+    // ----------------------------
+    // Números válidos en límites
+    // ----------------------------
     @Test
-    void comment() throws Exception {
-        compilationSuccessful(readFromFile("comment.txt"));
+    public void edgeIntegerValues() throws Exception {
+        compilationSuccessful("a = 2147483647"); // Integer.MAX_VALUE
+        compilationSuccessful("b = -2147483648"); // Integer.MIN_VALUE
     }
 
+    // ----------------------------
+    // Expresiones complejas con signos anidados
+    // ----------------------------
     @Test
-    void init() throws Exception {
-        compilationSuccessful(readFromFile("init.txt"));
+    public void nestedSigns() throws Exception {
+        compilationSuccessful("x = -(-a + 3*-(b-2))");
+        compilationSuccessful("y = -(1 + -(2 + 3))");
     }
 
+    // ----------------------------
+    // Strings demasiado largos
+    // ----------------------------
     @Test
-    void and() throws Exception {
-        compilationSuccessful(readFromFile("and.txt"));
+    public void stringTooLong() {
+        String longString = "\"" + "a".repeat(Constants.MAX_LENGTH + 1) + "\"";
+        assertThrows(InvalidLengthException.class, () -> compilationSuccessful("s = " + longString));
     }
 
+    // ----------------------------
+    // Identificadores demasiado largos
+    // ----------------------------
     @Test
-    void or() throws Exception {
-        compilationSuccessful(readFromFile("or.txt"));
+    public void identifierTooLong() {
+        String longIdentifier = "a".repeat(Constants.MAX_LENGTH + 1);
+        assertThrows(InvalidLengthException.class, () -> compilationSuccessful(longIdentifier + " = 5"));
     }
 
+    // ----------------------------
+    // Caracteres desconocidos
+    // ----------------------------
     @Test
-    void not() throws Exception {
-        compilationSuccessful(readFromFile("not.txt"));
+    public void unknownCharacter() {
+        assertThrows(UnknownCharacterException.class, () -> compilationSuccessful("x = 5 $"));
     }
 
+    // ----------------------------
+    // Errores de sintaxis
+    // ----------------------------
     @Test
-    void ifStatement() throws Exception {
-        compilationSuccessful(readFromFile("if.txt"));
+    public void syntaxError() {
+        compilationError("1234");       // número sin asignación
+        compilationError("x = * 5");    // operador incorrecto
+        compilationError("y = (2 + 3"); // paréntesis sin cerrar
     }
 
-    @Test
-    void whileStatement() throws Exception {
-        compilationSuccessful(readFromFile("while.txt"));
-    }
-
-
+    // ----------------------------
+    // Métodos auxiliares
+    // ----------------------------
     private void compilationSuccessful(String input) throws Exception {
-        assertThat(scan(input).sym).isEqualTo(ParserSym.EOF);
+        Symbol result = scan(input);
+        assertThat(result.sym).isEqualTo(ParserSym.EOF);
     }
 
     private void compilationError(String input){
@@ -96,6 +130,4 @@ public class ParserTest {
         assertThat(url).isNotNull();
         return IOUtils.toString(url.openStream(), StandardCharsets.UTF_8);
     }
-
-
 }

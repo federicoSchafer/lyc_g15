@@ -46,21 +46,13 @@ public class LexerTest {
     });
   }
 
-  @Test
-  public void invalidPositiveIntegerConstantValue() {
+@Test
+public void invalidIntegerConstantOverflow() {
     assertThrows(InvalidIntegerException.class, () -> {
-      scan("%d".formatted(9223372036854775807L));
-      nextToken();
+        scan("9223372036854775807");  // Número que excede Integer.MAX_VALUE
+        nextToken();
     });
-  }
-
-  @Test
-  public void invalidNegativeIntegerConstantValue() {
-    assertThrows(InvalidIntegerException.class, () -> {
-      scan("%d".formatted(-9223372036854775807L));
-      nextToken();
-    });
-  }
+}
 
   @Test
   public void assignmentWithExpressions() throws Exception {

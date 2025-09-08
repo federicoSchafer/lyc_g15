@@ -34,8 +34,9 @@ Letter         = [a-zA-Z]
 Digit          = [0-9]
 
 Identifier     = {Letter}({Letter}|{Digit})*
-IntegerConst   = -?{Digit}+
+IntegerConst = {Digit}+
 StringLiteral  = \"([^\"\n\r])*\"
+
 
 %%
 
@@ -63,14 +64,17 @@ StringLiteral  = \"([^\"\n\r])*\"
     return symbol(ParserSym.IDENTIFIER, yytext());
 }
 
-/* === Constantes enteras (positivas) === */
+/* === Constantes enteras (sin signo) === */
 {IntegerConst} {
     try {
         long value = Long.parseLong(yytext());
-        if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) {
+
+        if (value < 0 || value > Integer.MAX_VALUE) {
             throw new InvalidIntegerException("Constante fuera de rango: " + yytext());
         }
-        return symbol(ParserSym.INTEGER_CONSTANT, (int)value);
+
+        return symbol(ParserSym.INTEGER_CONSTANT, (int) value);
+
     } catch (NumberFormatException ex) {
         throw new InvalidIntegerException("Constante inválida: " + yytext());
     }
@@ -88,7 +92,6 @@ StringLiteral  = \"([^\"\n\r])*\"
     
     return symbol(ParserSym.STRING_CONSTANT, value);
 }
-
 
 /* === Whitespace y comentarios === */
 {Whitespace}       { /* ignorar */ }
