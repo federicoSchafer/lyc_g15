@@ -1,109 +1,85 @@
 package lyc.compiler;
 
 import java_cup.runtime.*;
+import lyc.compiler.model.*;
 
-class Parser;
+// ===== Símbolos terminales =====
+terminal ASSIG, PLUS, SUB, MULT, DIV, OPEN_BRACKET, CLOSE_BRACKET, COMMA, SEMI;
+terminal INTEGER_CONSTANT;
+terminal IDENTIFIER;
+terminal STRING_CONSTANT;
+terminal INTEGER, BOOLEAN, DATECONVERTED;
 
-// Terminals 
-// Tipos de datos
-terminal INTEGER;
-terminal BOOLEAN;
-terminal DATECONVERTED;
+// ===== No terminales =====
+non terminal program;
+non terminal decls, decl, var_decl, const_decl, id_list;
+non terminal type;
+non terminal sentence, assignment, expr, term, factor;
 
-// Símbolos de puntuacion
-terminal SEMI;
-terminal COMMA;
+// Start symbol
+start with program;
 
-// Operadores y asignación
-terminal ASSIG;
-terminal PLUS;
-terminal SUB;
-terminal MULT;
-terminal DIV;
-terminal OPEN_BRACKET;
-terminal CLOSE_BRACKET;
+// ===========================
+// Gramática
+// ===========================
 
-// Constantes e identificadores
-terminal Integer INTEGER_CONSTANT;
-terminal String IDENTIFIER;
+program ::= decls sentence SEMI
+           {: System.out.println("[RULE] program -> decls sentence ;"); :} ;
 
+decls ::= /* vacío */
+        | decls decl
+           {: System.out.println("[RULE] decls -> decls decl"); :} ;
 
-// Non Terminals (usamos Object para flexibilidad)
-non terminal Object sentence;
-non terminal Object assignment;
-non terminal Object expression;
-non terminal Object term;
-non terminal Object factor;
+decl ::= var_decl
+       | const_decl
+           {: System.out.println("[RULE] decl -> var_decl | const_decl"); :} ;
 
-// Start Symbol Definition
-start with sentence;
+// Declaración de variable
+var_decl ::= type id_list SEMI
+             {: System.out.println("[RULE] var_decl -> type id_list ;"); :} ;
 
-// ===== Grammar Rules =====
+// Declaración de constante
+const_decl ::= type IDENTIFIER ASSIG expr SEMI
+               {: System.out.println("[RULE] const_decl -> type IDENTIFIER = expr ;"); :} ;
 
-sentence ::= assignment
-  {: 
-     System.out.println("End");
-     RESULT = null; 
-  :}
-  ;
+// Lista de identificadores
+id_list ::= IDENTIFIER
+           {: System.out.println("[RULE] id_list -> IDENTIFIER"); :}
+         | id_list COMMA IDENTIFIER
+           {: System.out.println("[RULE] id_list -> id_list , IDENTIFIER"); :} ;
 
-assignment ::= IDENTIFIER:id ASSIG expression:expr
-  {:
-     System.out.println("Assignment to: " + id);
-     RESULT = null; // En el futuro podés guardar en tabla de símbolos
-  :}
-  ;
+// Tipos
+type ::= INTEGER    {: System.out.println("[RULE] type -> Integer"); :}
+       | BOOLEAN    {: System.out.println("[RULE] type -> Boolean"); :}
+       | DATECONVERTED {: System.out.println("[RULE] type -> DateConverted"); :} ;
 
-// ---- Expressions ----
-expression ::= expression:left PLUS term:right
-  {:
-     System.out.println("+");
-     RESULT = Integer.valueOf(((Integer)left) + ((Integer)right));
-  :}
-  | expression:left SUB term:right
-  {:
-     System.out.println("-");
-     RESULT = Integer.valueOf(((Integer)left) - ((Integer)right));
-  :}
-  | term:t
-  {:
-     System.out.println("Expression = Term");
-     RESULT = t;
-  :}
-  ;
+// Sentencias simples
+sentence ::= assignment SEMI
+            {: System.out.println("[RULE] sentence -> assignment ;"); :} ;
 
-// ---- Terms ----
-term ::= term:left MULT factor:right
-  {:
-     System.out.println("*");
-     RESULT = Integer.valueOf(((Integer)left) * ((Integer)right));
-  :}
-  | term:left DIV factor:right
-  {:
-     System.out.println("/");
-     RESULT = Integer.valueOf(((Integer)left) / ((Integer)right));
-  :}
-  | factor:f
-  {:
-     System.out.println("Term = factor");
-     RESULT = f;
-  :}
-  ;
+assignment ::= IDENTIFIER ASSIG expr
+              {: System.out.println("[RULE] assignment -> IDENTIFIER = expr"); :} ;
 
-// ---- Factors ----
-factor ::= IDENTIFIER:id
-  {:
-     System.out.println("Id: " + id);
-     RESULT = id; // Devuelve String (nombre). En semántica, lo buscás en la tabla.
-  :}
-  | INTEGER_CONSTANT:constant
-  {:
-     System.out.println("Constant: " + constant);
-     RESULT = constant; // Devuelve Integer
-  :}
-  | OPEN_BRACKET expression:inner CLOSE_BRACKET
-  {:
-     System.out.println("Factor = (Expression)");
-     RESULT = inner;
-  :}
-  ;
+// Expresiones
+expr ::= expr PLUS term
+       {: System.out.println("[RULE] expr -> expr + term"); :}
+       | expr SUB term
+       {: System.out.println("[RULE] expr -> expr - term"); :}
+       | term
+       {: System.out.println("[RULE] expr -> term"); :} ;
+
+term ::= term MULT factor
+       {: System.out.println("[RULE] term -> term * factor"); :}
+       | term DIV factor
+       {: System.out.println("[RULE] term -> term / factor"); :}
+       | factor
+       {: System.out.println("[RULE] term -> factor"); :} ;
+
+factor ::= IDENTIFIER
+         {: System.out.println("[RULE] factor -> IDENTIFIER"); :}
+       | INTEGER_CONSTANT
+         {: System.out.println("[RULE] factor -> INTEGER_CONSTANT"); :}
+       | STRING_CONSTANT
+         {: System.out.println("[RULE] factor -> STRING_CONSTANT"); :}
+       | OPEN_BRACKET expr CLOSE_BRACKET
+         {: System.out.println("[RULE] factor -> (expr)"); :} ;
