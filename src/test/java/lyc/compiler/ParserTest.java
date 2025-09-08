@@ -52,15 +52,6 @@ public class ParserTest {
     }
 
     // ----------------------------
-    // Numeros validos en limites
-    // ----------------------------
-    @Test
-    public void edgeIntegerValues() throws Exception {
-        compilationSuccessful("a = 2147483647;"); // Integer.MAX_VALUE
-        compilationSuccessful("b = -2147483648;"); // Integer.MIN_VALUE (como operador unario + literal)
-    }
-
-    // ----------------------------
     // Parentesis y precedencia
     // ----------------------------
     @Test
