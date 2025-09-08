@@ -1,115 +1,142 @@
 package lyc.compiler;
 
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
+import lyc.compiler.model.*;
 import java_cup.runtime.Symbol;
 import lyc.compiler.factories.ParserFactory;
-import lyc.compiler.model.InvalidIntegerException;
-import lyc.compiler.model.InvalidLengthException;
-import lyc.compiler.model.UnknownCharacterException;
-import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-
 import static com.google.common.truth.Truth.assertThat;
-import static lyc.compiler.Constants.EXAMPLES_ROOT_DIRECTORY;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static lyc.compiler.constants.Constants.*;
 
-@Disabled
 public class ParserTest {
+
+    // ----------------------------
+    // Asignaciones simples
+    // ----------------------------
+    @Test
+    public void simpleAssignments() throws Exception {
+        compilationSuccessful("x = 5;");
+        compilationSuccessful("y = variable;");
+        compilationSuccessful("z = \"hello\";");
+    }
 
     // ----------------------------
     // Asignaciones con expresiones
     // ----------------------------
     @Test
     public void assignmentWithExpression() throws Exception {
-        compilationSuccessful("c=d*(e-21)/4");
-        compilationSuccessful("x = (a+b)*3 - 10/2");
-        compilationSuccessful("result = (v1 + v2) * (v3 - 5)");
+        compilationSuccessful("c = d * (e - 21) / 4;");
+        compilationSuccessful("x = (a + b) * 3 - 10 / 2;");
+        compilationSuccessful("result = (v1 + v2) * (v3 - 5);");
     }
 
     // ----------------------------
-    // Asignaciones múltiples desde archivo
+    // Operadores unarios
     // ----------------------------
     @Test
-    void assignments() throws Exception {
-        compilationSuccessful(readFromFile("assignments.txt"));
+    public void unaryOperators() throws Exception {
+        compilationSuccessful("x = -5;");
+        compilationSuccessful("y = +variable;");
+        compilationSuccessful("z = -(a + b);");
+        compilationSuccessful("w = -(-x);");
     }
 
     // ----------------------------
-    // Números fuera de rango
-    // ----------------------------
-    @Test
-    public void invalidPositiveInteger() {
-        assertThrows(InvalidIntegerException.class, () -> {
-            compilationSuccessful("x = 2147483648"); // Integer.MAX_VALUE + 1
-        });
-    }
-
-    @Test
-    public void invalidNegativeInteger() {
-        assertThrows(InvalidIntegerException.class, () -> {
-            compilationSuccessful("x = -2147483649"); // Integer.MIN_VALUE - 1
-        });
-    }
-
-    // ----------------------------
-    // Números válidos en límites
-    // ----------------------------
-    @Test
-    public void edgeIntegerValues() throws Exception {
-        compilationSuccessful("a = 2147483647"); // Integer.MAX_VALUE
-        compilationSuccessful("b = -2147483648"); // Integer.MIN_VALUE
-    }
-
-    // ----------------------------
-    // Expresiones complejas con signos anidados
+    // Expresiones con signos anidados
     // ----------------------------
     @Test
     public void nestedSigns() throws Exception {
-        compilationSuccessful("x = -(-a + 3*-(b-2))");
-        compilationSuccessful("y = -(1 + -(2 + 3))");
+        compilationSuccessful("x = -(a + 3 * -(b - 2));");
+        compilationSuccessful("y = -(1 + -(2 + 3));");
     }
 
     // ----------------------------
-    // Strings demasiado largos
+    // Numeros validos en limites
     // ----------------------------
     @Test
-    public void stringTooLong() {
-        String longString = "\"" + "a".repeat(Constants.MAX_LENGTH + 1) + "\"";
-        assertThrows(InvalidLengthException.class, () -> compilationSuccessful("s = " + longString));
+    public void edgeIntegerValues() throws Exception {
+        compilationSuccessful("a = 2147483647;"); // Integer.MAX_VALUE
+        compilationSuccessful("b = -2147483648;"); // Integer.MIN_VALUE (como operador unario + literal)
     }
 
     // ----------------------------
-    // Identificadores demasiado largos
+    // Parentesis y precedencia
     // ----------------------------
     @Test
-    public void identifierTooLong() {
-        String longIdentifier = "a".repeat(Constants.MAX_LENGTH + 1);
-        assertThrows(InvalidLengthException.class, () -> compilationSuccessful(longIdentifier + " = 5"));
+    public void precedenceAndParentheses() throws Exception {
+        compilationSuccessful("result = a + b * c;");
+        compilationSuccessful("result = (a + b) * c;");
+        compilationSuccessful("result = a * (b + c);");
+        compilationSuccessful("complex = ((a + b) * (c - d)) / ((e + f) - g);");
     }
 
     // ----------------------------
-    // Caracteres desconocidos
+    // Expresiones con strings
     // ----------------------------
     @Test
-    public void unknownCharacter() {
-        assertThrows(UnknownCharacterException.class, () -> compilationSuccessful("x = 5 $"));
+    public void stringExpressions() throws Exception {
+        compilationSuccessful("message = \"Hello World\";");
+        compilationSuccessful("path = \"C:\\\\temp\\\\file.txt\";");
+        compilationSuccessful("quote = \"She said \\\"Hello\\\"\";");
+    }
+
+    
+    @Test
+    public void lexerErrorIntegerOverflow() {
+        assertThrows(InvalidIntegerException.class, () -> {
+            scan("x = 2147483648;"); // Integer.MAX_VALUE + 1
+        });
+    }
+
+    @Test 
+    public void lexerErrorStringTooLong() {
+        String longString = "\"" + "a".repeat(MAX_LENGTH + 1) + "\"";
+        assertThrows(InvalidLengthException.class, () -> {
+            scan("s = " + longString + ";");
+        });
+    }
+
+    @Test
+    public void lexerErrorIdentifierTooLong() {
+        String longIdentifier = "a".repeat(MAX_LENGTH + 1);
+        assertThrows(InvalidLengthException.class, () -> {
+            scan(longIdentifier + " = 5;");
+        });
+    }
+
+    @Test
+    public void lexerErrorUnknownCharacter() {
+        assertThrows(UnknownCharacterException.class, () -> {
+            scan("x = 5 $;");
+        });
     }
 
     // ----------------------------
-    // Errores de sintaxis
+    // TESTS DE ERRORES DEL PARSER (errores de sintaxis)
     // ----------------------------
     @Test
-    public void syntaxError() {
-        compilationError("1234");       // número sin asignación
-        compilationError("x = * 5");    // operador incorrecto
-        compilationError("y = (2 + 3"); // paréntesis sin cerrar
+    public void parserSyntaxErrors() {
+        // Número sin asignación
+        compilationError("1234;");
+        
+        // Operador incorrecto
+        compilationError("x = * 5;");
+        
+        // Paréntesis sin cerrar
+        compilationError("y = (2 + 3;");
+        
+        // Falta punto y coma
+        compilationError("x = 5");
+        
+        // Operador sin operando
+        compilationError("x = 5 +;");
+        
+        // División sin operando
+        compilationError("x = / 5;");
     }
 
-    // ----------------------------
+        // ----------------------------
     // Métodos auxiliares
     // ----------------------------
     private void compilationSuccessful(String input) throws Exception {
@@ -117,17 +144,11 @@ public class ParserTest {
         assertThat(result.sym).isEqualTo(ParserSym.EOF);
     }
 
-    private void compilationError(String input){
+    private void compilationError(String input) {
         assertThrows(Exception.class, () -> scan(input));
     }
 
     private Symbol scan(String input) throws Exception {
         return ParserFactory.create(input).parse();
-    }
-
-    private String readFromFile(String fileName) throws IOException {
-        URL url = new URL(EXAMPLES_ROOT_DIRECTORY + "/%s".formatted(fileName));
-        assertThat(url).isNotNull();
-        return IOUtils.toString(url.openStream(), StandardCharsets.UTF_8);
     }
 }

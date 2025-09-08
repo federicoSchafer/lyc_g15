@@ -34,9 +34,8 @@ Letter         = [a-zA-Z]
 Digit          = [0-9]
 
 Identifier     = {Letter}({Letter}|{Digit})*
-IntegerConst = {Digit}+
-StringLiteral  = \"([^\"\n\r])*\"
-
+IntegerConst   = {Digit}+
+StringLiteral  = \"([^\"\n\r\\]|\\.)*\"
 
 %%
 
@@ -64,30 +63,31 @@ StringLiteral  = \"([^\"\n\r])*\"
     return symbol(ParserSym.IDENTIFIER, yytext());
 }
 
-/* === Constantes enteras (sin signo) === */
+/* === Constantes enteras === */
 {IntegerConst} {
     try {
         long value = Long.parseLong(yytext());
-
-        if (value < 0 || value > Integer.MAX_VALUE) {
+        if (value > Integer.MAX_VALUE) {
             throw new InvalidIntegerException("Constante fuera de rango: " + yytext());
         }
-
         return symbol(ParserSym.INTEGER_CONSTANT, (int) value);
-
     } catch (NumberFormatException ex) {
         throw new InvalidIntegerException("Constante inválida: " + yytext());
     }
 }
 
-
 /* === Constantes string === */
 {StringLiteral} {
     String raw = yytext();
-    String value = raw.substring(1, raw.length()-1);
+    String value = raw.substring(1, raw.length()-1)
+                      .replace("\\n", "\n")
+                      .replace("\\t", "\t")
+                      .replace("\\r", "\r")
+                      .replace("\\\"", "\"")
+                      .replace("\\\\", "\\");
     
     if (value.length() > MAX_LENGTH) {
-        throw new InvalidLengthException("String demasiado largo: " + value.length());
+        throw new InvalidLengthException("String demasiado largo: " + value);
     }
     
     return symbol(ParserSym.STRING_CONSTANT, value);
@@ -101,3 +101,4 @@ StringLiteral  = \"([^\"\n\r])*\"
 
 /* === Caracteres desconocidos === */
 [^] { throw new UnknownCharacterException(yytext()); }
+

@@ -10,11 +10,22 @@ terminal IDENTIFIER;
 terminal STRING_CONSTANT;
 terminal INTEGER, BOOLEAN, DATECONVERTED;
 
+// Terminal ficticio para precedencia unaria
+terminal UMINUS;
+
 // ===== No terminales =====
 non terminal program;
-non terminal decls, decl, var_decl, const_decl, id_list;
+non terminal statements, statement;
+non terminal decl, var_decl, const_decl;
+non terminal id_list;
 non terminal type;
-non terminal sentence, assignment, expr, term, factor;
+non terminal assignment;
+non terminal expr, term, unary_expr, factor;
+
+// ===== Precedencia =====
+precedence left PLUS, SUB;
+precedence left MULT, DIV;
+precedence right UMINUS;
 
 // ===== Símbolo inicial =====
 start with program;
@@ -24,30 +35,36 @@ start with program;
 // ===========================
 
 // ---- Programa ----
-program ::= decls sentence SEMI
-           {: System.out.println("[RULE] program -> decls sentence ;"); :} ;
+program ::= statements
+           {: System.out.println("[RULE] program -> statements"); :} ;
+
+// ---- Lista de statements ----
+statements ::= /* vacío */
+             | statements statement
+           {: System.out.println("[RULE] statements -> statements statement"); :} ;
+
+// ---- Statement ----
+statement ::= decl
+            | assignment SEMI
+           {: System.out.println("[RULE] statement -> decl | assignment ;"); :} ;
 
 // ---- Declaraciones ----
-decls ::= /* vacío */
-        | decls decl
-           {: System.out.println("[RULE] decls -> decls decl"); :} ;
-
 decl ::= var_decl
        | const_decl
            {: System.out.println("[RULE] decl -> var_decl | const_decl"); :} ;
 
 // Declaración de variable
 var_decl ::= type id_list SEMI
-             {: System.out.println("[RULE] var_decl -> type id_list ;"); :} ;
+           {: System.out.println("[RULE] var_decl -> type id_list ;"); :} ;
 
 // Declaración de constante
-const_decl ::= type IDENTIFIER ASSIG expr SEMI
-               {: System.out.println("[RULE] const_decl -> type IDENTIFIER := expr ;"); :} ;
+const_decl ::= type IDENTIFIER:id ASSIG expr:e SEMI
+           {: System.out.println("[RULE] const_decl -> type IDENTIFIER := expr ;"); :} ;
 
 // ---- Lista de identificadores ----
-id_list ::= IDENTIFIER
+id_list ::= IDENTIFIER:id
            {: System.out.println("[RULE] id_list -> IDENTIFIER"); :}
-         | id_list COMMA IDENTIFIER
+         | id_list:list COMMA IDENTIFIER:id
            {: System.out.println("[RULE] id_list -> id_list , IDENTIFIER"); :} ;
 
 // ---- Tipos ----
@@ -55,12 +72,9 @@ type ::= INTEGER         {: System.out.println("[RULE] type -> Integer"); :}
        | BOOLEAN         {: System.out.println("[RULE] type -> Boolean"); :}
        | DATECONVERTED   {: System.out.println("[RULE] type -> DateConverted"); :} ;
 
-// ---- Sentencias ----
-sentence ::= assignment SEMI
-            {: System.out.println("[RULE] sentence -> assignment ;"); :} ;
-
+// ---- Asignaciones ----
 assignment ::= IDENTIFIER ASSIG expr
-              {: System.out.println("[RULE] assignment -> IDENTIFIER := expr"); :} ;
+           {: System.out.println("[RULE] assignment -> IDENTIFIER := expr"); :} ;
 
 // ---- Expresiones ----
 expr ::= expr PLUS term
@@ -71,30 +85,27 @@ expr ::= expr PLUS term
        {: System.out.println("[RULE] expr -> term"); :} ;
 
 // ---- Términos ----
-term ::= term MULT factor
-       {: System.out.println("[RULE] term -> term * factor"); :}
-       | term DIV factor
-       {: System.out.println("[RULE] term -> term / factor"); :}
-       | factor
-       {: System.out.println("[RULE] term -> factor"); :} ;
+term ::= term MULT unary_expr
+       {: System.out.println("[RULE] term -> term * unary_expr"); :}
+       | term DIV unary_expr
+       {: System.out.println("[RULE] term -> term / unary_expr"); :}
+       | unary_expr
+       {: System.out.println("[RULE] term -> unary_expr"); :} ;
+
+// ---- Expresiones unarias ----
+unary_expr ::= SUB factor
+              {: System.out.println("[RULE] unary_expr -> - factor"); :} %prec UMINUS
+             | PLUS factor
+              {: System.out.println("[RULE] unary_expr -> + factor"); :} %prec UMINUS
+             | factor
+              {: System.out.println("[RULE] unary_expr -> factor"); :} ;
 
 // ---- Factores ----
 factor ::= INTEGER_CONSTANT
-         {: 
-           System.out.println("[RULE] factor -> INTEGER_CONSTANT: " + ((Symbol)RESULT).value);
-           RESULT = ((Symbol)RESULT).value; 
-         :}
+         {: System.out.println("[RULE] factor -> INTEGER_CONSTANT"); :}
        | IDENTIFIER
-         {: 
-           System.out.println("[RULE] factor -> IDENTIFIER: " + ((Symbol)RESULT).value);
-           RESULT = ((Symbol)RESULT).value; 
-         :}
+         {: System.out.println("[RULE] factor -> IDENTIFIER"); :}
        | STRING_CONSTANT
-         {: 
-           System.out.println("[RULE] factor -> STRING_CONSTANT: " + ((Symbol)RESULT).value);
-           RESULT = ((Symbol)RESULT).value; 
-         :}
+         {: System.out.println("[RULE] factor -> STRING_CONSTANT"); :}
        | OPEN_BRACKET expr CLOSE_BRACKET
-         {: 
-           System.out.println("[RULE] factor -> (expr): " + RESULT);
-         :} ;
+         {: System.out.println("[RULE] factor -> (expr)"); :} ;
