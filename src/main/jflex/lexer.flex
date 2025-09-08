@@ -18,7 +18,6 @@ import static lyc.compiler.constants.Constants.*;
   return symbol(ParserSym.EOF);
 %eofval}
 
-
 %{
   private Symbol symbol(int type) {
     return new Symbol(type, yyline, yycolumn);
@@ -28,49 +27,42 @@ import static lyc.compiler.constants.Constants.*;
   }
 %}
 
-
+/* === Expresiones regulares === */
 LineTerminator = \r|\n|\r\n
-InputCharacter = [^\r\n]
-Identation =  [ \t\f]
+Identation     = [ \t\f]
+Letter         = [a-zA-Z]
+Digit          = [0-9]
 
-Plus = "+"
-Mult = "*"
-Sub = "-"
-Div = "/"
-Assig = "="
-OpenBracket = "("
-CloseBracket = ")"
-Letter = [a-zA-Z]
-Digit = [0-9]
-
-WhiteSpace = {LineTerminator} | {Identation}
-Identifier = {Letter} ({Letter}|{Digit})*
-IntegerConstant = {Digit}+
+Identifier     = {Letter}({Letter}|{Digit})*
+IntegerConst   = {Digit}+
 
 %%
 
+/* === Palabras reservadas === */
+"Integer"       { return symbol(ParserSym.INTEGER); }
+"Boolean"       { return symbol(ParserSym.BOOLEAN); }
+"DateConverted" { return symbol(ParserSym.DATECONVERTED); }
 
-/* keywords */
+/* === Operadores y símbolos === */
+"="     { return symbol(ParserSym.ASSIG); }
+"+"     { return symbol(ParserSym.PLUS); }
+"-"     { return symbol(ParserSym.SUB); }
+"*"     { return symbol(ParserSym.MULT); }
+"/"     { return symbol(ParserSym.DIV); }
+"("     { return symbol(ParserSym.OPEN_BRACKET); }
+")"     { return symbol(ParserSym.CLOSE_BRACKET); }
+","     { return symbol(ParserSym.COMMA); }
+";"     { return symbol(ParserSym.SEMI); }
 
-<YYINITIAL> {
-  /* identifiers */
-  {Identifier}                             { return symbol(ParserSym.IDENTIFIER, yytext()); }
-  /* Constants */
-  {IntegerConstant}                        { return symbol(ParserSym.INTEGER_CONSTANT, yytext()); }
+/* === Identificadores y constantes === */
+{Identifier}    { return symbol(ParserSym.IDENTIFIER, yytext()); }
+{IntegerConst}  { return symbol(ParserSym.INTEGER_CONSTANT, Integer.parseInt(yytext())); }
 
-  /* operators */
-  {Plus}                                    { return symbol(ParserSym.PLUS); }
-  {Sub}                                     { return symbol(ParserSym.SUB); }
-  {Mult}                                    { return symbol(ParserSym.MULT); }
-  {Div}                                     { return symbol(ParserSym.DIV); }
-  {Assig}                                   { return symbol(ParserSym.ASSIG); }
-  {OpenBracket}                             { return symbol(ParserSym.OPEN_BRACKET); }
-  {CloseBracket}                            { return symbol(ParserSym.CLOSE_BRACKET); }
+/* === Espacios en blanco y comentarios === */
+{Identation}      { /* ignorar */ }
+{LineTerminator}  { /* ignorar */ }
+"//".*            { /* comentario de línea */ }
+"/*"([^*]|\*+[^*/])*\*+"/"   { /* comentario multilinea */ }
 
-  /* whitespace */
-  {WhiteSpace}                   { /* ignore */ }
-}
-
-
-/* error fallback */
-[^]                              { throw new UnknownCharacterException(yytext()); }
+/* === Error === */
+[^] { throw new UnknownCharacterException(yytext()); }

@@ -4,8 +4,17 @@ import java_cup.runtime.*;
 
 class Parser;
 
+// Terminals 
+// Tipos de datos
+terminal INTEGER;
+terminal BOOLEAN;
+terminal DATECONVERTED;
 
-// Terminals
+// Símbolos de puntuacion
+terminal SEMI;
+terminal COMMA;
+
+// Operadores y asignación
 terminal ASSIG;
 terminal PLUS;
 terminal SUB;
@@ -13,27 +22,88 @@ terminal MULT;
 terminal DIV;
 terminal OPEN_BRACKET;
 terminal CLOSE_BRACKET;
-terminal INTEGER_CONSTANT;
-terminal IDENTIFIER;
 
-// Non Terminals
-non terminal sentence;
-non terminal assignment;
-non terminal expression;
-non terminal term;
-non terminal factor;
+// Constantes e identificadores
+terminal Integer INTEGER_CONSTANT;
+terminal String IDENTIFIER;
+
+
+// Non Terminals (usamos Object para flexibilidad)
+non terminal Object sentence;
+non terminal Object assignment;
+non terminal Object expression;
+non terminal Object term;
+non terminal Object factor;
 
 // Start Symbol Definition
 start with sentence;
 
-sentence ::= assignment {: System.out.println("End"); :};
-assignment ::= IDENTIFIER ASSIG expression {: System.out.println("Assignment"); :};
-expression ::= expression PLUS term {: System.out.println("+"); :};
-expression ::= expression SUB term {: System.out.println("-"); :};
-expression ::= term {: System.out.println("Expression = Term"); :};
-term ::= term MULT factor {: System.out.println("*"); :};
-term ::= term DIV factor {: System.out.println("/"); :};
-term ::= factor {: System.out.println("Term = factor"); :};
-factor ::= IDENTIFIER:id  {: System.out.println("Id: " + id); :};
-factor ::= INTEGER_CONSTANT:constant {: System.out.println("Constant: " + constant ); :};
-factor ::= OPEN_BRACKET expression CLOSE_BRACKET {: System.out.println("Factor = (Expression)"); :};
+// ===== Grammar Rules =====
+
+sentence ::= assignment
+  {: 
+     System.out.println("End");
+     RESULT = null; 
+  :}
+  ;
+
+assignment ::= IDENTIFIER:id ASSIG expression:expr
+  {:
+     System.out.println("Assignment to: " + id);
+     RESULT = null; // En el futuro podés guardar en tabla de símbolos
+  :}
+  ;
+
+// ---- Expressions ----
+expression ::= expression:left PLUS term:right
+  {:
+     System.out.println("+");
+     RESULT = Integer.valueOf(((Integer)left) + ((Integer)right));
+  :}
+  | expression:left SUB term:right
+  {:
+     System.out.println("-");
+     RESULT = Integer.valueOf(((Integer)left) - ((Integer)right));
+  :}
+  | term:t
+  {:
+     System.out.println("Expression = Term");
+     RESULT = t;
+  :}
+  ;
+
+// ---- Terms ----
+term ::= term:left MULT factor:right
+  {:
+     System.out.println("*");
+     RESULT = Integer.valueOf(((Integer)left) * ((Integer)right));
+  :}
+  | term:left DIV factor:right
+  {:
+     System.out.println("/");
+     RESULT = Integer.valueOf(((Integer)left) / ((Integer)right));
+  :}
+  | factor:f
+  {:
+     System.out.println("Term = factor");
+     RESULT = f;
+  :}
+  ;
+
+// ---- Factors ----
+factor ::= IDENTIFIER:id
+  {:
+     System.out.println("Id: " + id);
+     RESULT = id; // Devuelve String (nombre). En semántica, lo buscás en la tabla.
+  :}
+  | INTEGER_CONSTANT:constant
+  {:
+     System.out.println("Constant: " + constant);
+     RESULT = constant; // Devuelve Integer
+  :}
+  | OPEN_BRACKET expression:inner CLOSE_BRACKET
+  {:
+     System.out.println("Factor = (Expression)");
+     RESULT = inner;
+  :}
+  ;
