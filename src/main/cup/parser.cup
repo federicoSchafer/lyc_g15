@@ -76,10 +76,29 @@ term ::= term MULT factor
        {: System.out.println("[RULE] term -> factor"); :} ;
 
 factor ::= IDENTIFIER
-         {: System.out.println("[RULE] factor -> IDENTIFIER"); :}
+         {: 
+           System.out.println("[RULE] factor -> IDENTIFIER: " + ((Symbol)RESULT).value);
+           RESULT = ((Symbol)RESULT).value; 
+         :}
        | INTEGER_CONSTANT
-         {: System.out.println("[RULE] factor -> INTEGER_CONSTANT"); :}
+         {: 
+           System.out.println("[RULE] factor -> INTEGER_CONSTANT: " + ((Symbol)RESULT).value);
+           RESULT = ((Symbol)RESULT).value; 
+         :}
+       | SUB factor
+         {: 
+           System.out.println("[RULE] factor -> -factor: " + RESULT);
+           if (RESULT instanceof Integer) {
+               RESULT = -((Integer)RESULT);
+           }
+         :}
        | STRING_CONSTANT
-         {: System.out.println("[RULE] factor -> STRING_CONSTANT"); :}
+         {: 
+           System.out.println("[RULE] factor -> STRING_CONSTANT: " + ((Symbol)RESULT).value);
+           RESULT = ((Symbol)RESULT).value; 
+         :}
        | OPEN_BRACKET expr CLOSE_BRACKET
-         {: System.out.println("[RULE] factor -> (expr)"); :} ;
+         {: 
+           System.out.println("[RULE] factor -> (expr): " + RESULT);
+           /* RESULT ya contiene el valor de expr */
+         :} ;

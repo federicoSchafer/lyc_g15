@@ -20,10 +20,10 @@ import static lyc.compiler.constants.Constants.*;
 
 %{
   private Symbol symbol(int type) {
-    return new Symbol(type, yyline, yycolumn);
+      return new Symbol(type, yyline, yycolumn);
   }
   private Symbol symbol(int type, Object value) {
-    return new Symbol(type, yyline, yycolumn, value);
+      return new Symbol(type, yyline, yycolumn, value);
   }
 %}
 
@@ -35,7 +35,7 @@ Digit          = [0-9]
 
 Identifier     = {Letter}({Letter}|{Digit})*
 IntegerConst   = -?{Digit}+
-StringLiteral  = \"([^"\n\r]|\\[nrt"\\])*\"  // acepta escapes simples
+StringLiteral  = \"([^\"\\r\\n]|\\.)*\"  // acepta escapes simples y largos
 
 %%
 
@@ -63,7 +63,7 @@ StringLiteral  = \"([^"\n\r]|\\[nrt"\\])*\"  // acepta escapes simples
     return symbol(ParserSym.IDENTIFIER, yytext());
 }
 
-/* === Constantes enteras === */
+/* === Constantes enteras (positivas) === */
 {IntegerConst} {
     try {
         long value = Long.parseLong(yytext());
@@ -75,6 +75,7 @@ StringLiteral  = \"([^"\n\r]|\\[nrt"\\])*\"  // acepta escapes simples
         throw new InvalidIntegerException("Constante inválida: " + yytext());
     }
 }
+
 
 /* === Constantes string === */
 {StringLiteral} {
@@ -90,6 +91,7 @@ StringLiteral  = \"([^"\n\r]|\\[nrt"\\])*\"  // acepta escapes simples
     }
     return symbol(ParserSym.STRING_CONSTANT, value);
 }
+
 
 /* === Whitespace y comentarios === */
 {Whitespace}       { /* ignorar */ }
