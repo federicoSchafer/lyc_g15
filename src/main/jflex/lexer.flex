@@ -55,7 +55,13 @@ IntegerConst   = {Digit}+
 ";"     { return symbol(ParserSym.SEMI); }
 
 /* === Identificadores y constantes === */
-{Identifier}    { return symbol(ParserSym.IDENTIFIER, yytext()); }
+{Identifier} {
+    if (yytext().length() > MAX_LENGTH) {
+        throw new InvalidLengthException("Identificador demasiado largo: " + yytext());
+    }
+    return symbol(ParserSym.IDENTIFIER, yytext());
+}
+
 {IntegerConst}  { return symbol(ParserSym.INTEGER_CONSTANT, Integer.parseInt(yytext())); }
 
 /* === Espacios en blanco y comentarios === */
