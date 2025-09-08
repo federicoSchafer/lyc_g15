@@ -35,7 +35,7 @@ Digit          = [0-9]
 
 Identifier     = {Letter}({Letter}|{Digit})*
 IntegerConst   = -?{Digit}+
-StringLiteral  = \"([^\"\\r\\n]|\\.)*\"  // acepta escapes simples y largos
+StringLiteral  = \"([^\"\n\r])*\"
 
 %%
 
@@ -80,15 +80,12 @@ StringLiteral  = \"([^\"\\r\\n]|\\.)*\"  // acepta escapes simples y largos
 /* === Constantes string === */
 {StringLiteral} {
     String raw = yytext();
-    String value = raw.substring(1, raw.length()-1)
-                      .replace("\\n","\n")
-                      .replace("\\t","\t")
-                      .replace("\\r","\r")
-                      .replace("\\\"","\"")
-                      .replace("\\\\","\\");
+    String value = raw.substring(1, raw.length()-1);
+    
     if (value.length() > MAX_LENGTH) {
-        throw new InvalidLengthException("String demasiado largo: " + value);
+        throw new InvalidLengthException("String demasiado largo: " + value.length());
     }
+    
     return symbol(ParserSym.STRING_CONSTANT, value);
 }
 

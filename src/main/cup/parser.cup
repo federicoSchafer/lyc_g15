@@ -16,16 +16,18 @@ non terminal decls, decl, var_decl, const_decl, id_list;
 non terminal type;
 non terminal sentence, assignment, expr, term, factor;
 
-// Start symbol
+// ===== Símbolo inicial =====
 start with program;
 
 // ===========================
 // Gramática
 // ===========================
 
+// ---- Programa ----
 program ::= decls sentence SEMI
            {: System.out.println("[RULE] program -> decls sentence ;"); :} ;
 
+// ---- Declaraciones ----
 decls ::= /* vacío */
         | decls decl
            {: System.out.println("[RULE] decls -> decls decl"); :} ;
@@ -40,27 +42,27 @@ var_decl ::= type id_list SEMI
 
 // Declaración de constante
 const_decl ::= type IDENTIFIER ASSIG expr SEMI
-               {: System.out.println("[RULE] const_decl -> type IDENTIFIER = expr ;"); :} ;
+               {: System.out.println("[RULE] const_decl -> type IDENTIFIER := expr ;"); :} ;
 
-// Lista de identificadores
+// ---- Lista de identificadores ----
 id_list ::= IDENTIFIER
            {: System.out.println("[RULE] id_list -> IDENTIFIER"); :}
          | id_list COMMA IDENTIFIER
            {: System.out.println("[RULE] id_list -> id_list , IDENTIFIER"); :} ;
 
-// Tipos
-type ::= INTEGER    {: System.out.println("[RULE] type -> Integer"); :}
-       | BOOLEAN    {: System.out.println("[RULE] type -> Boolean"); :}
-       | DATECONVERTED {: System.out.println("[RULE] type -> DateConverted"); :} ;
+// ---- Tipos ----
+type ::= INTEGER         {: System.out.println("[RULE] type -> Integer"); :}
+       | BOOLEAN         {: System.out.println("[RULE] type -> Boolean"); :}
+       | DATECONVERTED   {: System.out.println("[RULE] type -> DateConverted"); :} ;
 
-// Sentencias simples
+// ---- Sentencias ----
 sentence ::= assignment SEMI
             {: System.out.println("[RULE] sentence -> assignment ;"); :} ;
 
 assignment ::= IDENTIFIER ASSIG expr
-              {: System.out.println("[RULE] assignment -> IDENTIFIER = expr"); :} ;
+              {: System.out.println("[RULE] assignment -> IDENTIFIER := expr"); :} ;
 
-// Expresiones
+// ---- Expresiones ----
 expr ::= expr PLUS term
        {: System.out.println("[RULE] expr -> expr + term"); :}
        | expr SUB term
@@ -68,6 +70,7 @@ expr ::= expr PLUS term
        | term
        {: System.out.println("[RULE] expr -> term"); :} ;
 
+// ---- Términos ----
 term ::= term MULT factor
        {: System.out.println("[RULE] term -> term * factor"); :}
        | term DIV factor
@@ -75,6 +78,7 @@ term ::= term MULT factor
        | factor
        {: System.out.println("[RULE] term -> factor"); :} ;
 
+// ---- Factores ----
 factor ::= IDENTIFIER
          {: 
            System.out.println("[RULE] factor -> IDENTIFIER: " + ((Symbol)RESULT).value);
