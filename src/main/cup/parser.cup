@@ -3,24 +3,27 @@ package lyc.compiler;
 import java_cup.runtime.*;
 import lyc.compiler.model.*;
 
+parser code {:
+    public SymbolTableGenerator symbolTable = new SymbolTableGenerator(); //Objeto global para la tabla de simbolos
+:}
+
+
 // ===== Símbolos terminales =====
-terminal ASSIG, PLUS, SUB, MULT, DIV, OPEN_BRACKET, CLOSE_BRACKET, COMMA, SEMI;
-terminal INTEGER_CONSTANT;
-terminal IDENTIFIER;
-terminal STRING_CONSTANT;
-terminal INTEGER, BOOLEAN, DATECONVERTED;
+terminal ASSIG, PLUS, SUB, MULT, DIV, OPEN_BRACKET, CLOSE_BRACKET, COMMA, LESS_THAN
+    GREATER_THAN, LESS_THAN_EQUAL, GREATER_THAN_EQUAL, DOBLE_EQUAL, COLON, OPEN_BRACE,
+    CLOSE_BRACE, AND, OR, NOT, INT, BOOLEAN, STRING, FLOAT, STRING_CONSTANT, FLOAT_CONSTANT
+    INTEGER_CONSTANT, INIT, WHILE, IF, ELSE, READ, WRITE, EQUAL_EXP, TRIANG_AREA_MAX;
 
 // Terminal ficticio para precedencia unaria
-terminal UMINUS;
+terminal UMINUS; //Necesario ?
 
 // ===== No terminales =====
-non terminal program;
-non terminal statements, statement;
-non terminal decl, var_decl, const_decl;
-non terminal id_list;
-non terminal type;
-non terminal assignment;
+non terminal program, statements, statement;
+non terminal decl, var_decl, id_list;
+non terminal type, assignment;
 non terminal expr, term, unary_expr, factor;
+non terminal while, if, reader, write, equalexpressions, triangleareamaximum,
+    condition, simple_condition;
 
 // ===== Precedencia =====
 precedence left PLUS, SUB;
@@ -35,46 +38,86 @@ start with program;
 // ===========================
 
 // ---- Programa ----
-program ::= statements
-           {: System.out.println("[RULE] program -> statements"); :} ;
+program ::= decl statements {: System.out.println("[RULE] program -> decl statements"); :} ;
 
 // ---- Lista de statements ----
 statements ::= /* vacío */
-             | statements statement
-           {: System.out.println("[RULE] statements -> statements statement"); :} ;
+               {: System.out.println("[RULE] statements -> "); :}
+               | statements statement
+               {: System.out.println("[RULE] statements -> statements statement"); :} ;
 
 // ---- Statement ----
-statement ::= decl
-            | assignment SEMI
-           {: System.out.println("[RULE] statement -> decl | assignment ;"); :} ;
+statement ::= assignment {: System.out.println("[RULE] statement -> assignment"); :}
+              | while {: System.out.println("[RULE] statement -> while"); :}
+              | if {: System.out.println("[RULE] statement -> if"); :}
+              | reader {: System.out.println("[RULE] statement -> reader"); :}
+              | write {: System.out.println("[RULE] statement -> write"); :}
+              | equalexpressions {: System.out.println("[RULE] statement -> equalexpressions"); :}
+              | triangleareamaximum {: System.out.println("[RULE] statement -> triangleareamaximum"); :};
 
 // ---- Declaraciones ----
-decl ::= var_decl
-       | const_decl
-           {: System.out.println("[RULE] decl -> var_decl | const_decl"); :} ;
+decl ::= INIT OPEN_BRACE var_decl CLOSE_BRACE
+           {: System.out.println("[RULE] decl -> INIT { var_decl }"); :} ;
 
 // Declaración de variable
-var_decl ::= type id_list SEMI
-           {: System.out.println("[RULE] var_decl -> type id_list ;"); :} ;
-
-// Declaración de constante
-const_decl ::= type IDENTIFIER:id ASSIG expr:e SEMI
-           {: System.out.println("[RULE] const_decl -> type IDENTIFIER := expr ;"); :} ;
+var_decl ::= id_list COLON type
+             {: System.out.println("[RULE] var_decl -> id_list : type");
+                for (String id : $id_list) {
+                    symbolTable.addVariable(id); //agrego a la tabla de símbolos
+                }
+             :}
+            | id_list COLON type var_decl
+             {: System.out.println("[RULE] var_decl -> id_list : type var_decl");
+                for (String id : $id_list) {
+                    symbolTable.addVariable(id); //agrego a la tabla de símbolos
+                }
+             :} ;
 
 // ---- Lista de identificadores ----
-id_list ::= IDENTIFIER:id
-           {: System.out.println("[RULE] id_list -> IDENTIFIER"); :}
-         | id_list:list COMMA IDENTIFIER:id
-           {: System.out.println("[RULE] id_list -> id_list , IDENTIFIER"); :} ;
+id_list ::= IDENTIFIER
+              {: System.out.println("[RULE] id_list -> IDENTIFIER"); :}
+            | id_list COMMA IDENTIFIER
+              {: System.out.println("[RULE] id_list -> id_list , IDENTIFIER"); :} ;
 
-// ---- Tipos ----
-type ::= INTEGER         {: System.out.println("[RULE] type -> Integer"); :}
-       | BOOLEAN         {: System.out.println("[RULE] type -> Boolean"); :}
-       | DATECONVERTED   {: System.out.println("[RULE] type -> DateConverted"); :} ;
+// ---- While ----
+while ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE
+    {: System.out.println("[RULE] while -> WHILE( condition ) { statements }"); :} ;
+
+// ---- If -----
+if ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE ELSE OPEN_BRACE
+    statements CLOSE_BRACE %prec ELSE //%prec else para resolver posibles conflictos con if-elese anidados
+        {: System.out.println("[RULE] if -> IF( condition ) { statements } ELSE { statements }"); :}
+       | IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE
+        {: System.out.println("[RULE] if -> IF( condition ) { statements }"); :}
+
+// ---- Reader, Write, equalExpressions, TriangkeAreaMaximum
 
 // ---- Asignaciones ----
 assignment ::= IDENTIFIER ASSIG expr
-           {: System.out.println("[RULE] assignment -> IDENTIFIER := expr"); :} ;
+                {: System.out.println("[RULE] assignment -> IDENTIFIER = expr"); :} ;
+
+// ---- Contion ----
+condition ::= simple_condition
+              {: System.out.println("[RULE] condition -> simple_condition"); :}
+            | simple_condition AND simple_condition
+              {: System.out.println("[RULE] condition -> simple_condition AND simple_condition"); :}
+            | simple_condition OR simple_condition
+              {: System.out.println("[RULE] condition -> simple_condition OR simple_condition"); :}
+            | NOT simple_condition
+              {: System.out.println("[RULE] condition -> NOT simple_condition"); :};
+
+simple_condition ::= expr GREATER_THAN expr
+                     {: System.out.println("[RULE] simple_condition -> expr > expr"); :}
+                   | expr LESS_THAN expr
+                     {: System.out.println("[RULE] simple_condition -> expr < expr"); :}
+                   | expr LESS_THAN_EQUAL expr
+                     {: System.out.println("[RULE] simple_condition -> expr <= expr"); :}
+                   | expr GREATER_THAN_EQUAL expr
+                     {: System.out.println("[RULE] simple_condition -> expr >= expr"); :}
+                   | expr DOBLE_EQUAL expr
+                     {: System.out.println("[RULE] simple_condition -> expr == expr"); :};
+
+
 
 // ---- Expresiones ----
 expr ::= expr PLUS term
@@ -94,18 +137,32 @@ term ::= term MULT unary_expr
 
 // ---- Expresiones unarias ----
 unary_expr ::= SUB factor
-              {: System.out.println("[RULE] unary_expr -> - factor"); :} %prec UMINUS
+             {: System.out.println("[RULE] unary_expr -> - factor"); :} %prec UMINUS
              | PLUS factor
-              {: System.out.println("[RULE] unary_expr -> + factor"); :} %prec UMINUS
+             {: System.out.println("[RULE] unary_expr -> + factor"); :} %prec UMINUS
              | factor
-              {: System.out.println("[RULE] unary_expr -> factor"); :} ;
+             {: System.out.println("[RULE] unary_expr -> factor"); :} ;
 
 // ---- Factores ----
 factor ::= INTEGER_CONSTANT
-         {: System.out.println("[RULE] factor -> INTEGER_CONSTANT"); :}
-       | IDENTIFIER
+         {: System.out.println("[RULE] factor -> INTEGER_CONSTANT");
+            //Ver si se agregan: symbolTable.addConstant($INTEGER_CONSTANT, $INTEGER_CONSTANT);
+         :}
+         | IDENTIFIER
          {: System.out.println("[RULE] factor -> IDENTIFIER"); :}
-       | STRING_CONSTANT
-         {: System.out.println("[RULE] factor -> STRING_CONSTANT"); :}
-       | OPEN_BRACKET expr CLOSE_BRACKET
+         | FLOAT_CONSTANT
+         {: System.out.println("[RULE] factor -> FLOAT_CONSTANT");
+           // symbolTable.addConstant($FLOAT_CONSTANT, $FLOAT_CONSTANT);
+         :}
+         | STRING_CONSTANT
+         {: System.out.println("[RULE] factor -> STRING_CONSTANT");
+           // symbolTable.addConstant($STRING_CONSTANT, $STRING_CONSTANT);
+         :}
+         | OPEN_BRACKET expr CLOSE_BRACKET
          {: System.out.println("[RULE] factor -> (expr)"); :} ;
+
+// ---- Tipos ----
+type ::= INT             {: System.out.println("[RULE] type -> INT"); :}
+       | BOOLEAN         {: System.out.println("[RULE] type -> BOOLEAN"); :}
+       | FLOAT           {: System.out.println("[RULE] type -> FLOAT"); :}
+       | STRING          {: System.out.println("[RULE] type -> STRING"); :};

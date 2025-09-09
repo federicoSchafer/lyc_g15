@@ -35,14 +35,27 @@ Digit          = [0-9]
 
 Identifier     = {Letter}({Letter}|{Digit})*
 IntegerConst   = {Digit}+
-StringLiteral  = \"([^\"\n\r\\]|\\.)*\"
+FloatConst     = ({Digit}+)?\.{Digit}+ //
+StringLiteral  = \"({Letter}|{Digit})*\" //Strings alfanumericos hasta 50 caracteres
 
 %%
 
 /* === Palabras reservadas === */
-"Integer"        { return symbol(ParserSym.INTEGER); }
-"Boolean"        { return symbol(ParserSym.BOOLEAN); }
-"DateConverted"  { return symbol(ParserSym.DATECONVERTED); }
+"Int"            { return symbol(ParserSym.INT); }
+"Boolean"        { return symbol(ParserSym.BOOLEAN); } //A chequear, la funcion expressionsEqual devuelte true o false
+"Float"          { return symbol(ParserSym.FLOAT); }
+"String"         { return symbol(ParserSym.STRING); }
+"init"           { return symbol(ParserSym.INIT); }
+"while"          { return symbol(ParserSym.WHILE); }
+"if"             { return symbol(ParserSym.IF); }
+"else"           { return symbol(ParserSym.ELSE); }
+"read"           { return symbol(ParserSym.READ); }
+"write"          { return symbol(ParserSym.WRITE); }
+"AND"            { return symbol(ParserSym.AND); }
+"OR"             { return symbol(ParserSym.OR); }
+"NOT"            { return symbol(ParserSym.NOT); }
+"equalExpressions" { return symbol(ParseSym.EQUAL_EXP"); }
+"triangleAreaMaximum" { return symbol(ParseSym.TRIANG_AREA_MAX); }
 
 /* === Operadores y símbolos === */
 "="   { return symbol(ParserSym.ASSIG); }
@@ -50,10 +63,17 @@ StringLiteral  = \"([^\"\n\r\\]|\\.)*\"
 "-"   { return symbol(ParserSym.SUB); }
 "*"   { return symbol(ParserSym.MULT); }
 "/"   { return symbol(ParserSym.DIV); }
+">"   { return symbol(ParserSym.LESS_THAN); }
+"<"   { return symbol(ParserSym.GREATER_THAN); }
+"<="  { return symbol(ParserSym.LESS_THAN_EQUAL); }
+">="  { return symbol(ParserSym.GREATER_THAN_EQUAL); }
+"=="  { return symbol(ParserSym.DOBLE_EQUAL); }
 "("   { return symbol(ParserSym.OPEN_BRACKET); }
 ")"   { return symbol(ParserSym.CLOSE_BRACKET); }
 ","   { return symbol(ParserSym.COMMA); }
-";"   { return symbol(ParserSym.SEMI); }
+":"   { return symbol(ParserSym.COLON); }
+"{"   { return symbol(ParserSym.OPEN_BRACE }
+"}"   { return symbol(ParserSym.CLOSE_BRACE }
 
 /* === Identificadores === */
 {Identifier} {
@@ -66,13 +86,26 @@ StringLiteral  = \"([^\"\n\r\\]|\\.)*\"
 /* === Constantes enteras === */
 {IntegerConst} {
     try {
-        long value = Long.parseLong(yytext());
-        if (value > Integer.MAX_VALUE) {
-            throw new InvalidIntegerException("Constante fuera de rango: " + yytext());
+            int value = Integer.parseInt(yytext());
+            if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) { //Valido enteros de hasta 16 bits
+                throw new InvalidIntegerException("Constante fuera de rango: " + yytext());
+            }
+            return symbol(ParserSym.INTEGER_CONSTANT, value);
+        } catch (NumberFormatException ex) {
+            throw new InvalidIntegerException("Constante inválida: " + yytext());
         }
-        return symbol(ParserSym.INTEGER_CONSTANT, (int) value);
+}
+
+//To do: Hacer InvalidFloatException
+{FloatConst} {
+    try {
+        double value = Double.parseDouble(yytext());
+        if (value > Float.MAX_VALUE || value < -Float.MAX_VALUE) { //VaLido Floats de hasta 32 bits
+            throw new CompilerException("Constante flotante fuera de rango: " + yytext());
+        }
+        return symbol(ParserSym.FLOAT_CONSTANT, (float) value);
     } catch (NumberFormatException ex) {
-        throw new InvalidIntegerException("Constante inválida: " + yytext());
+        throw new CompilerException("Constante flotante inválida: " + yytext());
     }
 }
 
@@ -80,11 +113,6 @@ StringLiteral  = \"([^\"\n\r\\]|\\.)*\"
 {StringLiteral} {
     String raw = yytext();
     String value = raw.substring(1, raw.length()-1)
-                      .replace("\\n", "\n")
-                      .replace("\\t", "\t")
-                      .replace("\\r", "\r")
-                      .replace("\\\"", "\"")
-                      .replace("\\\\", "\\");
     
     if (value.length() > MAX_LENGTH) {
         throw new InvalidLengthException("String demasiado largo: " + value);
@@ -96,8 +124,36 @@ StringLiteral  = \"([^\"\n\r\\]|\\.)*\"
 /* === Whitespace y comentarios === */
 {Whitespace}       { /* ignorar */ }
 {LineTerminator}   { /* ignorar */ }
-"//".*             { /* comentario de línea */ }
-"/*"([^*]|\*+[^*/])*\*+"/"  { /* comentario multilinea */ }
+
+//To do: Hacer excepciones de EOF inesperado y anidamiento no permitido
+"#+"{
+    int nivel = 1; //primer nivel de comentario
+
+    while (true) {
+        int c = yyinput();
+        if (c == -1) { //fin de archivo inesperado
+            throw new CompilerException("Comentario no cerrado antes del EOF");
+        }
+
+        if (c == '#' && yyinputPeek() == '+') {
+            yyadvance(); //consumo el '+'
+            nivel++;
+            if (nivel > 2) {
+                throw new CompilerException("Anidamiento de comentarios no permitido");
+            }
+        }
+
+        else if (c == '+' && yyinputPeek() == '#') {
+            yyadvance(); //consumo el '#'
+            nivel--;
+            if (nivel == 0) {
+                break;
+            }
+        }
+    }
+}
+
+
 
 /* === Caracteres desconocidos === */
 [^] { throw new UnknownCharacterException(yytext()); }
