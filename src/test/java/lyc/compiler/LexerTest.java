@@ -56,7 +56,7 @@ public void invalidIntegerConstantOverflow() {
 
   @Test
   public void assignmentWithExpressions() throws Exception {
-    scan("c=d*(e-21)/4");
+    scan("c:=d*(e-21)/4");
     assertThat(nextToken()).isEqualTo(ParserSym.IDENTIFIER);
     assertThat(nextToken()).isEqualTo(ParserSym.ASSIG);
     assertThat(nextToken()).isEqualTo(ParserSym.IDENTIFIER);
@@ -100,7 +100,7 @@ public void invalidIntegerConstantOverflow() {
 
   @Test
   public void mixedAssignment() throws Exception {
-    scan("x=123;");
+    scan("x:=123;");
     assertThat(nextToken()).isEqualTo(ParserSym.IDENTIFIER);
     assertThat(nextToken()).isEqualTo(ParserSym.ASSIG);
     assertThat(nextToken()).isEqualTo(ParserSym.INTEGER_CONSTANT);
@@ -110,7 +110,7 @@ public void invalidIntegerConstantOverflow() {
 
   @Test
   public void dateLikeInteger() throws Exception {
-    scan("d=20250821;");
+    scan("d:=20250821;");
     assertThat(nextToken()).isEqualTo(ParserSym.IDENTIFIER);
     assertThat(nextToken()).isEqualTo(ParserSym.ASSIG);
     assertThat(nextToken()).isEqualTo(ParserSym.INTEGER_CONSTANT);

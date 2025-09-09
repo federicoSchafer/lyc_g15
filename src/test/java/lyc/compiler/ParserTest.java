@@ -16,9 +16,9 @@ public class ParserTest {
     // ----------------------------
     @Test
     public void simpleAssignments() throws Exception {
-        compilationSuccessful("x = 5;");
-        compilationSuccessful("y = variable;");
-        compilationSuccessful("z = \"hello\";");
+        compilationSuccessful("x := 5;");
+        compilationSuccessful("y := variable;");
+        compilationSuccessful("z := \"hello\";");
     }
 
     // ----------------------------
@@ -26,9 +26,9 @@ public class ParserTest {
     // ----------------------------
     @Test
     public void assignmentWithExpression() throws Exception {
-        compilationSuccessful("c = d * (e - 21) / 4;");
-        compilationSuccessful("x = (a + b) * 3 - 10 / 2;");
-        compilationSuccessful("result = (v1 + v2) * (v3 - 5);");
+        compilationSuccessful("c := d * (e - 21) / 4;");
+        compilationSuccessful("x := (a + b) * 3 - 10 / 2;");
+        compilationSuccessful("result := (v1 + v2) * (v3 - 5);");
     }
 
     // ----------------------------
@@ -36,10 +36,10 @@ public class ParserTest {
     // ----------------------------
     @Test
     public void unaryOperators() throws Exception {
-        compilationSuccessful("x = -5;");
-        compilationSuccessful("y = +variable;");
-        compilationSuccessful("z = -(a + b);");
-        compilationSuccessful("w = -(-x);");
+        compilationSuccessful("x := -5;");
+        compilationSuccessful("y := +variable;");
+        compilationSuccessful("z := -(a + b);");
+        compilationSuccessful("w := -(-x);");
     }
 
     // ----------------------------
@@ -47,8 +47,8 @@ public class ParserTest {
     // ----------------------------
     @Test
     public void nestedSigns() throws Exception {
-        compilationSuccessful("x = -(a + 3 * -(b - 2));");
-        compilationSuccessful("y = -(1 + -(2 + 3));");
+        compilationSuccessful("x := -(a + 3 * -(b - 2));");
+        compilationSuccessful("y := -(1 + -(2 + 3));");
     }
 
     // ----------------------------
@@ -56,10 +56,10 @@ public class ParserTest {
     // ----------------------------
     @Test
     public void precedenceAndParentheses() throws Exception {
-        compilationSuccessful("result = a + b * c;");
-        compilationSuccessful("result = (a + b) * c;");
-        compilationSuccessful("result = a * (b + c);");
-        compilationSuccessful("complex = ((a + b) * (c - d)) / ((e + f) - g);");
+        compilationSuccessful("result := a + b * c;");
+        compilationSuccessful("result := (a + b) * c;");
+        compilationSuccessful("result := a * (b + c);");
+        compilationSuccessful("complex := ((a + b) * (c - d)) / ((e + f) - g);");
     }
 
     // ----------------------------
@@ -67,16 +67,16 @@ public class ParserTest {
     // ----------------------------
     @Test
     public void stringExpressions() throws Exception {
-        compilationSuccessful("message = \"Hello World\";");
-        compilationSuccessful("path = \"C:\\\\temp\\\\file.txt\";");
-        compilationSuccessful("quote = \"She said \\\"Hello\\\"\";");
+        compilationSuccessful("message := \"Hello World\";");
+        compilationSuccessful("path := \"C:\\\\temp\\\\file.txt\";");
+        compilationSuccessful("quote := \"She said \\\"Hello\\\"\";");
     }
 
     
     @Test
     public void lexerErrorIntegerOverflow() {
         assertThrows(InvalidIntegerException.class, () -> {
-            scan("x = 2147483648;"); // Integer.MAX_VALUE + 1
+            scan("x := 2147483648;"); // Integer.MAX_VALUE + 1
         });
     }
 
@@ -84,7 +84,7 @@ public class ParserTest {
     public void lexerErrorStringTooLong() {
         String longString = "\"" + "a".repeat(MAX_LENGTH + 1) + "\"";
         assertThrows(InvalidLengthException.class, () -> {
-            scan("s = " + longString + ";");
+            scan("s := " + longString + ";");
         });
     }
 
@@ -92,14 +92,14 @@ public class ParserTest {
     public void lexerErrorIdentifierTooLong() {
         String longIdentifier = "a".repeat(MAX_LENGTH + 1);
         assertThrows(InvalidLengthException.class, () -> {
-            scan(longIdentifier + " = 5;");
+            scan(longIdentifier + " := 5;");
         });
     }
 
     @Test
     public void lexerErrorUnknownCharacter() {
         assertThrows(UnknownCharacterException.class, () -> {
-            scan("x = 5 $;");
+            scan("x := 5 $;");
         });
     }
 
@@ -112,19 +112,19 @@ public class ParserTest {
         compilationError("1234;");
         
         // Operador incorrecto
-        compilationError("x = * 5;");
+        compilationError("x := * 5;");
         
         // Paréntesis sin cerrar
-        compilationError("y = (2 + 3;");
+        compilationError("y := (2 + 3;");
         
         // Falta punto y coma
-        compilationError("x = 5");
+        compilationError("x := 5");
         
         // Operador sin operando
-        compilationError("x = 5 +;");
+        compilationError("x := 5 +;");
         
         // División sin operando
-        compilationError("x = / 5;");
+        compilationError("x := / 5;");
     }
 
         // ----------------------------

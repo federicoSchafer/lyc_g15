@@ -45,7 +45,7 @@ StringLiteral  = \"([^\"\n\r\\]|\\.)*\"
 "DateConverted"  { return symbol(ParserSym.DATECONVERTED); }
 
 /* === Operadores y símbolos === */
-"="   { return symbol(ParserSym.ASSIG); }
+":="   { return symbol(ParserSym.ASSIG); }
 "+"   { return symbol(ParserSym.PLUS); }
 "-"   { return symbol(ParserSym.SUB); }
 "*"   { return symbol(ParserSym.MULT); }
