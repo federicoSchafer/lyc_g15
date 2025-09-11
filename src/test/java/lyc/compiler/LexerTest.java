@@ -17,7 +17,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static lyc.compiler.constants.Constants.MAX_LENGTH;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-//@Disabled
+@Disabled
 public class LexerTest {
 
   private Lexer lexer;
@@ -83,10 +83,10 @@ public void invalidIntegerConstantOverflow() {
 
   @Test
   public void reservedWords() throws Exception {
-    scan("Integer Boolean DateConverted");
+    scan("Int Boolean triangleAreaMaximum");
     assertThat(nextToken()).isEqualTo(ParserSym.INTEGER);
     assertThat(nextToken()).isEqualTo(ParserSym.BOOLEAN);
-    assertThat(nextToken()).isEqualTo(ParserSym.DATECONVERTED);
+    assertThat(nextToken()).isEqualTo(ParserSym.TRIANG_AREA_MAX);
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 

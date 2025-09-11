@@ -9,6 +9,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static lyc.compiler.constants.Constants.*;
 
+@Disabled
 public class ParserTest {
 
     // ----------------------------

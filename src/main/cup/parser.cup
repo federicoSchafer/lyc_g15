@@ -4,14 +4,49 @@ import java_cup.runtime.*;
 import lyc.compiler.model.*;
 
 // ===== Símbolos terminales =====
-terminal ASSIG, PLUS, SUB, MULT, DIV, OPEN_BRACKET, CLOSE_BRACKET, COMMA, SEMI;
-terminal INTEGER_CONSTANT;
+terminal INTEGER;
+terminal BOOLEAN;
+terminal FLOAT;
+terminal STRING;
+terminal INIT;
+terminal WHILE;
+terminal IF;
+terminal ELSE;
+terminal READ;
+terminal WRITE;
+terminal AND;
+terminal OR;
+terminal NOT;
+terminal EQUAL_EXP;
+terminal TRIANG_AREA_MAX;
+
+terminal ASSIG;
+terminal PLUS; 
+terminal SUB;
+terminal MULT;
+terminal DIV;
+terminal LESS_THAN;
+terminal GREATER_THAN;
+terminal LESS_THAN_EQUAL;
+terminal GREATER_THAN_EQUAL; 
+terminal DOBLE_EQUAL;
+terminal OPEN_PARENTHESIS;
+terminal CLOSE_PARENTHESIS;
+terminal OPEN_BRACE;
+terminal CLOSE_BRACE;
+terminal OPEN_BRACKET;
+terminal CLOSE_BRACKET;
+terminal COMMA; 
+terminal SEMI;
+terminal COLON;
+
 terminal IDENTIFIER;
+terminal INTEGER_CONSTANT;
+terminal FLOAT_CONSTANT;
 terminal STRING_CONSTANT;
-terminal INTEGER, BOOLEAN, DATECONVERTED;
 
 // Terminal ficticio para precedencia unaria
-terminal UMINUS;
+terminal UMINUS; //?
 
 // ===== No terminales =====
 non terminal program;
@@ -69,8 +104,7 @@ id_list ::= IDENTIFIER:id
 
 // ---- Tipos ----
 type ::= INTEGER         {: System.out.println("[RULE] type -> Integer"); :}
-       | BOOLEAN         {: System.out.println("[RULE] type -> Boolean"); :}
-       | DATECONVERTED   {: System.out.println("[RULE] type -> DateConverted"); :} ;
+       | BOOLEAN         {: System.out.println("[RULE] type -> Boolean"); :} ;
 
 // ---- Asignaciones ----
 assignment ::= IDENTIFIER ASSIG expr
