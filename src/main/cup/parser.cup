@@ -56,6 +56,8 @@ non terminal id_list;
 non terminal type;
 non terminal assignment;
 non terminal expr, term, unary_expr, factor;
+non terminal while, if, reader, write, equalexpressions, triangleareamaximum;
+non terminal condition, simple_condition;
 
 // ===== Precedencia =====
 precedence left PLUS, SUB;
@@ -71,7 +73,9 @@ start with program;
 
 // ---- Programa ----
 program ::= statements
-           {: System.out.println("[RULE] program -> statements"); :} ;
+           {: System.out.println("[RULE] program -> statements"); :}
+          | decl statements
+           {: System.out.println("[RULE] program -> decl statements"); :} ;
 
 // ---- Lista de statements ----
 statements ::= /* vacío */
@@ -79,18 +83,18 @@ statements ::= /* vacío */
            {: System.out.println("[RULE] statements -> statements statement"); :} ;
 
 // ---- Statement ----
-statement ::= decl
-            | assignment SEMI
-           {: System.out.println("[RULE] statement -> decl | assignment ;"); :} ;
+statement ::= assignment SEMI
+           {: System.out.println("[RULE] statement -> assignment ;"); :} ;
 
 // ---- Declaraciones ----
-decl ::= var_decl
-       | const_decl
-           {: System.out.println("[RULE] decl -> var_decl | const_decl"); :} ;
+decl ::= INIT OPEN_BRACE var_decl CLOSE_BRACE
+           {: System.out.println("[RULE] decl -> INIT { var_decl }"); :} ;
 
 // Declaración de variable
-var_decl ::= type id_list SEMI
-           {: System.out.println("[RULE] var_decl -> type id_list ;"); :} ;
+var_decl ::= id_list COLON type
+             {: System.out.println("[RULE] var_decl -> id_list : type"); :}
+            | id_list COLON type var_decl
+             {: System.out.println("[RULE] var_decl -> id_list : type var_decl"); :} ;
 
 // Declaración de constante
 const_decl ::= type IDENTIFIER:id ASSIG expr:e SEMI
@@ -104,6 +108,8 @@ id_list ::= IDENTIFIER:id
 
 // ---- Tipos ----
 type ::= INTEGER         {: System.out.println("[RULE] type -> Integer"); :}
+       | FLOAT         {: System.out.println("[RULE] type -> Float"); :}
+       | STRING         {: System.out.println("[RULE] type -> String"); :}
        | BOOLEAN         {: System.out.println("[RULE] type -> Boolean"); :} ;
 
 // ---- Asignaciones ----
@@ -141,5 +147,5 @@ factor ::= INTEGER_CONSTANT
          {: System.out.println("[RULE] factor -> IDENTIFIER"); :}
        | STRING_CONSTANT
          {: System.out.println("[RULE] factor -> STRING_CONSTANT"); :}
-       | OPEN_BRACKET expr CLOSE_BRACKET
+       | OPEN_PARENTHESIS expr CLOSE_PARENTHESIS
          {: System.out.println("[RULE] factor -> (expr)"); :} ;
