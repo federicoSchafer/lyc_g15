@@ -9,78 +9,85 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static lyc.compiler.constants.Constants.*;
 
-@Disabled
+//@Disabled 
 public class ParserTest {
 
     // ----------------------------
     // Asignaciones simples
     // ----------------------------
+    @Disabled //OK
     @Test
     public void simpleAssignments() throws Exception {
-        compilationSuccessful("x := 5;");
-        compilationSuccessful("y := variable;");
-        compilationSuccessful("z := \"hello\";");
+        compilationSuccessful("x := 5");
+        compilationSuccessful("y := variable2");
+        compilationSuccessful("z := \"hello\"");
     }
 
     // ----------------------------
     // Asignaciones con expresiones
     // ----------------------------
+    @Disabled //OK
     @Test
     public void assignmentWithExpression() throws Exception {
-        compilationSuccessful("c := d * (e - 21) / 4;");
-        compilationSuccessful("x := (a + b) * 3 - 10 / 2;");
-        compilationSuccessful("result := (v1 + v2) * (v3 - 5);");
+        compilationSuccessful("c := d * (e - 21) / 4");
+        compilationSuccessful("x := (a + b) * 3 - 10 / 2");
+        compilationSuccessful("result := (v1 + v2) * (v3 - 5)");
     }
 
     // ----------------------------
     // Operadores unarios
     // ----------------------------
+    @Disabled //OK
     @Test
     public void unaryOperators() throws Exception {
-        compilationSuccessful("x := -5;");
-        compilationSuccessful("y := +variable;");
-        compilationSuccessful("z := -(a + b);");
-        compilationSuccessful("w := -(-x);");
+        compilationSuccessful("x := -5");
+        compilationSuccessful("y := +variable");
+        compilationSuccessful("z := -(a + b)");
+        compilationSuccessful("w := -(-x)");
     }
 
     // ----------------------------
     // Expresiones con signos anidados
     // ----------------------------
+    //@Disabled OK
     @Test
     public void nestedSigns() throws Exception {
-        compilationSuccessful("x := -(a + 3 * -(b - 2));");
-        compilationSuccessful("y := -(1 + -(2 + 3));");
+        compilationSuccessful("x := -(a + 3 * -(b - 2))");
+        compilationSuccessful("y := -(1 + -(2 + 3))");
     }
 
     // ----------------------------
     // Parentesis y precedencia
     // ----------------------------
+    @Disabled //OK
     @Test
     public void precedenceAndParentheses() throws Exception {
-        compilationSuccessful("result := a + b * c;");
-        compilationSuccessful("result := (a + b) * c;");
-        compilationSuccessful("result := a * (b + c);");
-        compilationSuccessful("complex := ((a + b) * (c - d)) / ((e + f) - g);");
+        compilationSuccessful("result := a + b * c");
+        compilationSuccessful("result := (a + b) * c");
+        compilationSuccessful("result := a * (b + c)");
+        compilationSuccessful("complex := ((a + b) * (c - d)) / ((e + f) - g)");
     }
 
     // ----------------------------
     // Expresiones con strings
     // ----------------------------
+    //@Disabled OK
     @Test
     public void stringExpressions() throws Exception {
-        compilationSuccessful("message := \"Hello World\";");
-        compilationSuccessful("path := \"C:\\\\temp\\\\file.txt\";");
-        compilationSuccessful("quote := \"She said \\\"Hello\\\"\";");
+        compilationSuccessful("message := \"Hello World\"");
+        compilationSuccessful("path := \"C:\\\\temp\\\\file.txt\"");
+        compilationSuccessful("quote := \"She said \\\"Hello\\\"\"");
     }
 
-    
+    @Disabled
     @Test
     public void lexerErrorIntegerOverflow() {
         assertThrows(InvalidIntegerException.class, () -> {
-            scan("x := 2147483648;"); // Integer.MAX_VALUE + 1
+            scan("x := 2147483648"); // Integer.MAX_VALUE + 1
         });
     }
 
+    @Disabled
     @Test 
     public void lexerErrorStringTooLong() {
         String longString = "\"" + "a".repeat(MAX_LENGTH + 1) + "\"";
@@ -89,6 +96,7 @@ public class ParserTest {
         });
     }
 
+    @Disabled
     @Test
     public void lexerErrorIdentifierTooLong() {
         String longIdentifier = "a".repeat(MAX_LENGTH + 1);
@@ -97,6 +105,7 @@ public class ParserTest {
         });
     }
 
+    @Disabled
     @Test
     public void lexerErrorUnknownCharacter() {
         assertThrows(UnknownCharacterException.class, () -> {
@@ -107,6 +116,7 @@ public class ParserTest {
     // ----------------------------
     // TESTS DE ERRORES DEL PARSER (errores de sintaxis)
     // ----------------------------
+    @Disabled
     @Test
     public void parserSyntaxErrors() {
         // Número sin asignación
@@ -128,7 +138,7 @@ public class ParserTest {
         compilationError("x := / 5;");
     }
 
-        // ----------------------------
+    // ----------------------------
     // Métodos auxiliares
     // ----------------------------
     private void compilationSuccessful(String input) throws Exception {
