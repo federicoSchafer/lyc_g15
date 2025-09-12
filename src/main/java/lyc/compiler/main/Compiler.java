@@ -36,5 +36,4 @@ public final class Compiler {
         System.out.println("Compilation Successful");
 
     }
-
 }

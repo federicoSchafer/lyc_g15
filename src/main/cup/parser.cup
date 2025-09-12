@@ -1,7 +1,8 @@
 package lyc.compiler;
-
+import lyc.compiler.files.SymbolTableGenerator;
 import java_cup.runtime.*;
 import lyc.compiler.model.*;
+import java.util.*;
 
 parser code {:
     public SymbolTableGenerator symbolTable = new SymbolTableGenerator(); //Objeto global para la tabla de simbolos
@@ -9,17 +10,21 @@ parser code {:
 
 
 // ===== Símbolos terminales =====
-terminal ASSIG, PLUS, SUB, MULT, DIV, OPEN_BRACKET, CLOSE_BRACKET, COMMA, LESS_THAN
+terminal ASSIG, PLUS, SUB, MULT, DIV, OPEN_BRACKET, CLOSE_BRACKET, COMMA, LESS_THAN,
     GREATER_THAN, LESS_THAN_EQUAL, GREATER_THAN_EQUAL, DOBLE_EQUAL, COLON, OPEN_BRACE,
-    CLOSE_BRACE, AND, OR, NOT, INT, BOOLEAN, STRING, FLOAT, STRING_CONSTANT, FLOAT_CONSTANT
-    INTEGER_CONSTANT, INIT, WHILE, IF, ELSE, READ, WRITE, EQUAL_EXP, TRIANG_AREA_MAX;
+    CLOSE_BRACE, AND, OR, NOT, INT, BOOLEAN, STRING, FLOAT, INIT, WHILE, IF, ELSE, READ, WRITE, EQUAL_EXP, TRIANG_AREA_MAX;
+terminal IDENTIFIER;
+terminal STRING_CONSTANT;
+terminal INTEGER_CONSTANT;
+terminal FLOAT_CONSTANT;
 
 // Terminal ficticio para precedencia unaria
-terminal UMINUS; //Necesario ?
+terminal UMINUS;
 
 // ===== No terminales =====
 non terminal program, statements, statement;
-non terminal decl, var_decl, id_list;
+non terminal decl, var_decl;
+non terminal id_list;
 non terminal type, assignment;
 non terminal expr, term, unary_expr, factor;
 non terminal while, if, reader, write, equalexpressions, triangleareamaximum,
@@ -59,36 +64,42 @@ statement ::= assignment {: System.out.println("[RULE] statement -> assignment")
 decl ::= INIT OPEN_BRACE var_decl CLOSE_BRACE
            {: System.out.println("[RULE] decl -> INIT { var_decl }"); :} ;
 
-// Declaración de variable
-var_decl ::= id_list COLON type
-             {: System.out.println("[RULE] var_decl -> id_list : type");
-                for (String id : $id_list) {
-                    symbolTable.addVariable(id); //agrego a la tabla de símbolos
-                }
+// ---- Declaración de variables ----
+var_decl ::= id_list:l COLON type:t
+             {:
+                System.out.println("[RULE] var_decl -> id_list : type");
+                symbolTable.addVariables((List<Object>) l);  // Recibe List<Object>
              :}
-            | id_list COLON type var_decl
-             {: System.out.println("[RULE] var_decl -> id_list : type var_decl");
-                for (String id : $id_list) {
-                    symbolTable.addVariable(id); //agrego a la tabla de símbolos
-                }
-             :} ;
+           | id_list:l COLON type:t var_decl:vd
+             {:
+                System.out.println("[RULE] var_decl -> id_list : type var_decl");
+                symbolTable.addVariables((List<Object>) l);  // Recibe List<Object>
+             :};
 
 // ---- Lista de identificadores ----
-id_list ::= IDENTIFIER
-              {: System.out.println("[RULE] id_list -> IDENTIFIER"); :}
-            | id_list COMMA IDENTIFIER
-              {: System.out.println("[RULE] id_list -> id_list , IDENTIFIER"); :} ;
+id_list ::= IDENTIFIER:s
+              {:
+                 List<Object> list = new ArrayList<>();
+                 list.add(s);
+                 RESULT = list;
+              :}
+          | id_list:l COMMA IDENTIFIER:s
+              {:
+                 List<Object> list = (List<Object>) l; // casteo explícito
+                 list.add(s);
+                 RESULT = list;
+              :};
 
 // ---- While ----
 while ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE
     {: System.out.println("[RULE] while -> WHILE( condition ) { statements }"); :} ;
 
 // ---- If -----
-if ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE ELSE OPEN_BRACE
-    statements CLOSE_BRACE %prec ELSE //%prec else para resolver posibles conflictos con if-elese anidados
-        {: System.out.println("[RULE] if -> IF( condition ) { statements } ELSE { statements }"); :}
-       | IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE
-        {: System.out.println("[RULE] if -> IF( condition ) { statements }"); :}
+if ::=
+           IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE ELSE OPEN_BRACE statements CLOSE_BRACE
+           {: System.out.println("[RULE] if -> IF( condition ) { statements } ELSE { statements }"); :}
+         | IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE
+           {: System.out.println("[RULE] if -> IF( condition ) { statements }"); :};
 
 // ---- Reader, Write, equalExpressions, TriangkeAreaMaximum
 
@@ -144,19 +155,19 @@ unary_expr ::= SUB factor
              {: System.out.println("[RULE] unary_expr -> factor"); :} ;
 
 // ---- Factores ----
-factor ::= INTEGER_CONSTANT
+factor ::= INTEGER_CONSTANT:i
          {: System.out.println("[RULE] factor -> INTEGER_CONSTANT");
-            //Ver si se agregan: symbolTable.addConstant($INTEGER_CONSTANT, $INTEGER_CONSTANT);
+            symbolTable.addConstant(i, i);
          :}
          | IDENTIFIER
          {: System.out.println("[RULE] factor -> IDENTIFIER"); :}
-         | FLOAT_CONSTANT
+         | FLOAT_CONSTANT:f
          {: System.out.println("[RULE] factor -> FLOAT_CONSTANT");
-           // symbolTable.addConstant($FLOAT_CONSTANT, $FLOAT_CONSTANT);
+           symbolTable.addConstant(f, f);
          :}
-         | STRING_CONSTANT
+         | STRING_CONSTANT:s
          {: System.out.println("[RULE] factor -> STRING_CONSTANT");
-           // symbolTable.addConstant($STRING_CONSTANT, $STRING_CONSTANT);
+           symbolTable.addConstant(s, s);
          :}
          | OPEN_BRACKET expr CLOSE_BRACKET
          {: System.out.println("[RULE] factor -> (expr)"); :} ;

@@ -7,13 +7,17 @@ import java.util.*;
 public class SymbolTableGenerator implements FileGenerator{
     private final Set<SymbolEntry> entries = new LinkedHashSet<>();
 
-    public void addVariable(String name) {
-        String symbolName = "_" + name;
-        entries.add(new SymbolEntry(symbolName, "-", name, name.length()));
+    public void addVariables(List<Object> names) {
+        for (Object name : names) {
+            String nameStr = name.toString();
+            String symbolName = "_" + nameStr;
+            entries.add(new SymbolEntry(symbolName, "-", nameStr, nameStr.length()));
+        }
     }
 
-    public void addConstant(String name, Object value) {
-        String symbolName = "_" + name;
+
+    public void addConstant(Object name, Object value) {
+        String symbolName = "_" + name.toString();
         String valStr = value.toString();
         entries.add(new SymbolEntry(symbolName, "-", valStr, valStr.length()));
     }

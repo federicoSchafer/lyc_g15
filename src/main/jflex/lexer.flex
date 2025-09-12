@@ -19,6 +19,12 @@ import static lyc.compiler.constants.Constants.*;
 %eofval}
 
 %{
+  int commentLevel = 0;
+%}
+
+%x COMMENT
+
+%{
   private Symbol symbol(int type) {
       return new Symbol(type, yyline, yycolumn);
   }
@@ -54,8 +60,8 @@ StringLiteral  = \"({Letter}|{Digit})*\" //Strings alfanumericos hasta 50 caract
 "AND"            { return symbol(ParserSym.AND); }
 "OR"             { return symbol(ParserSym.OR); }
 "NOT"            { return symbol(ParserSym.NOT); }
-"equalExpressions" { return symbol(ParseSym.EQUAL_EXP"); }
-"triangleAreaMaximum" { return symbol(ParseSym.TRIANG_AREA_MAX); }
+"equalExpressions" { return symbol(ParserSym.EQUAL_EXP); }
+"triangleAreaMaximum" { return symbol(ParserSym.TRIANG_AREA_MAX); }
 
 /* === Operadores y símbolos === */
 "="   { return symbol(ParserSym.ASSIG); }
@@ -72,8 +78,8 @@ StringLiteral  = \"({Letter}|{Digit})*\" //Strings alfanumericos hasta 50 caract
 ")"   { return symbol(ParserSym.CLOSE_BRACKET); }
 ","   { return symbol(ParserSym.COMMA); }
 ":"   { return symbol(ParserSym.COLON); }
-"{"   { return symbol(ParserSym.OPEN_BRACE }
-"}"   { return symbol(ParserSym.CLOSE_BRACE }
+"{"   { return symbol(ParserSym.OPEN_BRACE); }
+"}"   { return symbol(ParserSym.CLOSE_BRACE); }
 
 /* === Identificadores === */
 {Identifier} {
@@ -101,18 +107,18 @@ StringLiteral  = \"({Letter}|{Digit})*\" //Strings alfanumericos hasta 50 caract
     try {
         double value = Double.parseDouble(yytext());
         if (value > Float.MAX_VALUE || value < -Float.MAX_VALUE) { //VaLido Floats de hasta 32 bits
-            throw new CompilerException("Constante flotante fuera de rango: " + yytext());
+            throw new InvalidIntegerException("Constante flotante fuera de rango: " + yytext());
         }
         return symbol(ParserSym.FLOAT_CONSTANT, (float) value);
     } catch (NumberFormatException ex) {
-        throw new CompilerException("Constante flotante inválida: " + yytext());
+        throw new InvalidIntegerException("Constante flotante inválida: " + yytext());
     }
 }
 
 /* === Constantes string === */
 {StringLiteral} {
     String raw = yytext();
-    String value = raw.substring(1, raw.length()-1)
+    String value = raw.substring(1, raw.length()-1);
     
     if (value.length() > MAX_LENGTH) {
         throw new InvalidLengthException("String demasiado largo: " + value);
@@ -126,34 +132,33 @@ StringLiteral  = \"({Letter}|{Digit})*\" //Strings alfanumericos hasta 50 caract
 {LineTerminator}   { /* ignorar */ }
 
 //To do: Hacer excepciones de EOF inesperado y anidamiento no permitido
-"#+"{
-    int nivel = 1; //primer nivel de comentario
-
-    while (true) {
-        int c = yyinput();
-        if (c == -1) { //fin de archivo inesperado
-            throw new CompilerException("Comentario no cerrado antes del EOF");
-        }
-
-        if (c == '#' && yyinputPeek() == '+') {
-            yyadvance(); //consumo el '+'
-            nivel++;
-            if (nivel > 2) {
-                throw new CompilerException("Anidamiento de comentarios no permitido");
-            }
-        }
-
-        else if (c == '+' && yyinputPeek() == '#') {
-            yyadvance(); //consumo el '#'
-            nivel--;
-            if (nivel == 0) {
-                break;
-            }
-        }
-    }
+"#+" {
+    commentLevel = 1;
+    yybegin(COMMENT);
 }
 
+<COMMENT>{
+    "#+" {
+        if(commentLevel == 1) {
+            commentLevel++;
+        } else {
+            throw new RuntimeException("Anidamiento de comentarios no permitido");
+        }
+    }
 
+    "+#" {
+        commentLevel--;
+        if(commentLevel == 0) {
+            yybegin(YYINITIAL);
+        }
+    }
+
+    [^] { /* cualquier otro caracter dentro del comentario */ }
+
+    <<EOF>> {
+        throw new RuntimeException("Comentario no cerrado antes del EOF");
+    }
+}
 
 /* === Caracteres desconocidos === */
 [^] { throw new UnknownCharacterException(yytext()); }
