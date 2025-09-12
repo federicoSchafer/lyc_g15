@@ -24,12 +24,14 @@ public class LexerTest {
 
   /* === Tests existentes === */
 
+  //@Disabled //OK
   @Test
   public void comment() throws Exception {
-    scan("/*This is a comment*/");
+    scan("#+ This is a comment +#");
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
+  //@Disabled //OK
   @Test
   public void invalidStringConstantLength() {
     assertThrows(InvalidLengthException.class, () -> {
@@ -38,6 +40,7 @@ public class LexerTest {
     });
   }
 
+  //@Disabled //OK
   @Test
   public void invalidIdLength() {
     assertThrows(InvalidLengthException.class, () -> {
@@ -46,14 +49,16 @@ public class LexerTest {
     });
   }
 
-@Test
-public void invalidIntegerConstantOverflow() {
+  //@Disabled //OK
+  @Test
+  public void invalidIntegerConstantOverflow() {
     assertThrows(InvalidNumericException.class, () -> {
         scan("9223372036854775807");  // Número que excede Integer.MAX_VALUE
         nextToken();
     });
-}
+  }
 
+  //@Disabled //OK
   @Test
   public void assignmentWithExpressions() throws Exception {
     scan("c=d*(e-21)/4");
@@ -71,6 +76,7 @@ public void invalidIntegerConstantOverflow() {
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
+  //@Disabled OK
   @Test
   public void unknownCharacter() {
     assertThrows(UnknownCharacterException.class, () -> {
@@ -81,40 +87,42 @@ public void invalidIntegerConstantOverflow() {
 
   /* === Tests nuevos para tokens añadidos === */
 
+  //@Disabled //OK
   @Test
   public void reservedWords() throws Exception {
-    scan("Integer Boolean DateConverted");
-    //assertThat(nextToken()).isEqualTo(ParserSym.INTEGER);
-    assertThat(nextToken()).isEqualTo(ParserSym.BOOLEAN);
-    //assertThat(nextToken()).isEqualTo(ParserSym.DATECONVERTED);
+    scan("Int while triangleAreaMaximum");
+    assertThat(nextToken()).isEqualTo(ParserSym.INT);
+    assertThat(nextToken()).isEqualTo(ParserSym.WHILE);
+    assertThat(nextToken()).isEqualTo(ParserSym.TRIANG_AREA_MAX);
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
+  //@Disabled //OK
   @Test
   public void punctuationTokens() throws Exception {
     scan(";,");
-    //assertThat(nextToken()).isEqualTo(ParserSym.SEMI);
+    assertThat(nextToken()).isEqualTo(ParserSym.SEMICOLON);
     assertThat(nextToken()).isEqualTo(ParserSym.COMMA);
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
+  //@Disabled //OK
   @Test
   public void mixedAssignment() throws Exception {
-    scan("x=123;");
+    scan("x=123");
     assertThat(nextToken()).isEqualTo(ParserSym.IDENTIFIER);
     assertThat(nextToken()).isEqualTo(ParserSym.ASSIG);
     assertThat(nextToken()).isEqualTo(ParserSym.INTEGER_CONSTANT);
-    //assertThat(nextToken()).isEqualTo(ParserSym.SEMI);
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
+  //@Disabled //OK
   @Test
   public void dateLikeInteger() throws Exception {
-    scan("d=20250821;");
+    scan("d=32767");
     assertThat(nextToken()).isEqualTo(ParserSym.IDENTIFIER);
     assertThat(nextToken()).isEqualTo(ParserSym.ASSIG);
     assertThat(nextToken()).isEqualTo(ParserSym.INTEGER_CONSTANT);
-    //assertThat(nextToken()).isEqualTo(ParserSym.SEMI);
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
