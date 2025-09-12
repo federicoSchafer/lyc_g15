@@ -17,7 +17,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static lyc.compiler.constants.Constants.MAX_LENGTH;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Disabled
+//@Disabled
 public class LexerTest {
 
   private Lexer lexer;
@@ -26,7 +26,7 @@ public class LexerTest {
 
   @Test
   public void comment() throws Exception {
-    scan("/*This is a comment*/");
+    scan("#+ This is a comment +#");
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
@@ -38,7 +38,7 @@ public class LexerTest {
     });
   }
 
-  @Test
+   @Test
   public void invalidIdLength() {
     assertThrows(InvalidLengthException.class, () -> {
       scan(getRandomString());
@@ -46,26 +46,26 @@ public class LexerTest {
     });
   }
 
-@Test
-public void invalidIntegerConstantOverflow() {
+  @Test
+  public void invalidIntegerConstantOverflow() {
     assertThrows(InvalidIntegerException.class, () -> {
         scan("9223372036854775807");  // Número que excede Integer.MAX_VALUE
         nextToken();
     });
-}
+  }
 
   @Test
   public void assignmentWithExpressions() throws Exception {
-    scan("c:=d*(e-21)/4");
+    scan("c := d*(e-21)/4");
     assertThat(nextToken()).isEqualTo(ParserSym.IDENTIFIER);
     assertThat(nextToken()).isEqualTo(ParserSym.ASSIG);
     assertThat(nextToken()).isEqualTo(ParserSym.IDENTIFIER);
     assertThat(nextToken()).isEqualTo(ParserSym.MULT);
-    assertThat(nextToken()).isEqualTo(ParserSym.OPEN_BRACKET);
+    assertThat(nextToken()).isEqualTo(ParserSym.OPEN_PARENTHESIS);
     assertThat(nextToken()).isEqualTo(ParserSym.IDENTIFIER);
     assertThat(nextToken()).isEqualTo(ParserSym.SUB);
     assertThat(nextToken()).isEqualTo(ParserSym.INTEGER_CONSTANT);
-    assertThat(nextToken()).isEqualTo(ParserSym.CLOSE_BRACKET);
+    assertThat(nextToken()).isEqualTo(ParserSym.CLOSE_PARENTHESIS);
     assertThat(nextToken()).isEqualTo(ParserSym.DIV);
     assertThat(nextToken()).isEqualTo(ParserSym.INTEGER_CONSTANT);
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
@@ -79,42 +79,48 @@ public void invalidIntegerConstantOverflow() {
     });
   }
 
+
   /* === Tests nuevos para tokens añadidos === */
 
   @Test
   public void reservedWords() throws Exception {
-    scan("Int Boolean triangleAreaMaximum");
-    assertThat(nextToken()).isEqualTo(ParserSym.INTEGER);
-    assertThat(nextToken()).isEqualTo(ParserSym.BOOLEAN);
+    scan("triangleAreaMaximum Init equalExpressions");
     assertThat(nextToken()).isEqualTo(ParserSym.TRIANG_AREA_MAX);
+    assertThat(nextToken()).isEqualTo(ParserSym.INIT);
+    assertThat(nextToken()).isEqualTo(ParserSym.EQUAL_EXP);
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
   @Test
   public void punctuationTokens() throws Exception {
-    scan(";,");
+    scan(";:,(){}[]");
     assertThat(nextToken()).isEqualTo(ParserSym.SEMI);
+    assertThat(nextToken()).isEqualTo(ParserSym.COLON);
     assertThat(nextToken()).isEqualTo(ParserSym.COMMA);
+    assertThat(nextToken()).isEqualTo(ParserSym.OPEN_PARENTHESIS);
+    assertThat(nextToken()).isEqualTo(ParserSym.CLOSE_PARENTHESIS);
+    assertThat(nextToken()).isEqualTo(ParserSym.OPEN_BRACE);
+    assertThat(nextToken()).isEqualTo(ParserSym.CLOSE_BRACE);
+    assertThat(nextToken()).isEqualTo(ParserSym.OPEN_BRACKET);
+    assertThat(nextToken()).isEqualTo(ParserSym.CLOSE_BRACKET);
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
   @Test
   public void mixedAssignment() throws Exception {
-    scan("x:=123;");
+    scan("x:=123");
     assertThat(nextToken()).isEqualTo(ParserSym.IDENTIFIER);
     assertThat(nextToken()).isEqualTo(ParserSym.ASSIG);
     assertThat(nextToken()).isEqualTo(ParserSym.INTEGER_CONSTANT);
-    assertThat(nextToken()).isEqualTo(ParserSym.SEMI);
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
   @Test
   public void dateLikeInteger() throws Exception {
-    scan("d:=20250821;");
+    scan("d:=2025082");
     assertThat(nextToken()).isEqualTo(ParserSym.IDENTIFIER);
     assertThat(nextToken()).isEqualTo(ParserSym.ASSIG);
     assertThat(nextToken()).isEqualTo(ParserSym.INTEGER_CONSTANT);
-    assertThat(nextToken()).isEqualTo(ParserSym.SEMI);
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 

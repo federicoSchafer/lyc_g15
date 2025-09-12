@@ -34,10 +34,10 @@ Letter         = [a-zA-Z]
 Digit          = [0-9]
 
 Identifier     = {Letter}({Letter}|{Digit})*
-IntegerConst   = -?{Digit}+
+IntegerConst   = {Digit}+
 FloatConst     = ({Digit}+)?\.{Digit}+ 
 StringLiteral  = \"([^\"\n\r\\]|\\.)*\"
-Comment = \*-[^@]*(\r|\n|[^@])*?-\*
+Comment        = "#+"(.|\n)*?"+#"
 %%
 
 /* === Palabras reservadas === */

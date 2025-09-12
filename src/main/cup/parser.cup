@@ -4,26 +4,26 @@ import java_cup.runtime.*;
 import lyc.compiler.model.*;
 
 // ===== Símbolos terminales =====
-terminal INTEGER;
+terminal INTEGER; //2
 terminal BOOLEAN;
 terminal FLOAT;
-terminal STRING;
+terminal STRING; //5
 terminal INIT;
 terminal WHILE;
 terminal IF;
 terminal ELSE;
-terminal READ;
+terminal READ; //10
 terminal WRITE;
 terminal AND;
 terminal OR;
 terminal NOT;
 terminal EQUAL_EXP;
-terminal TRIANG_AREA_MAX;
+terminal TRIANG_AREA_MAX; //16
 
 terminal ASSIG;
 terminal PLUS; 
 terminal SUB;
-terminal MULT;
+terminal MULT; //20
 terminal DIV;
 terminal LESS_THAN;
 terminal GREATER_THAN;
@@ -33,14 +33,14 @@ terminal DOBLE_EQUAL;
 terminal OPEN_PARENTHESIS;
 terminal CLOSE_PARENTHESIS;
 terminal OPEN_BRACE;
-terminal CLOSE_BRACE;
+terminal CLOSE_BRACE; //30
 terminal OPEN_BRACKET;
 terminal CLOSE_BRACKET;
 terminal COMMA; 
 terminal SEMI;
 terminal COLON;
 
-terminal IDENTIFIER;
+terminal IDENTIFIER; //36
 terminal INTEGER_CONSTANT;
 terminal FLOAT_CONSTANT;
 terminal STRING_CONSTANT;
@@ -83,8 +83,8 @@ statements ::= /* vacío */
            {: System.out.println("[RULE] statements -> statements statement"); :} ;
 
 // ---- Statement ----
-statement ::= assignment SEMI
-           {: System.out.println("[RULE] statement -> assignment ;"); :} ;
+statement ::= assignment
+           {: System.out.println("[RULE] statement -> assignment"); :} ;
 
 // ---- Declaraciones ----
 decl ::= INIT OPEN_BRACE var_decl CLOSE_BRACE
@@ -97,8 +97,7 @@ var_decl ::= id_list COLON type
              {: System.out.println("[RULE] var_decl -> id_list : type var_decl"); :} ;
 
 // Declaración de constante
-const_decl ::= type IDENTIFIER:id ASSIG expr:e SEMI
-           {: System.out.println("[RULE] const_decl -> type IDENTIFIER := expr ;"); :} ;
+// todo
 
 // ---- Lista de identificadores ----
 id_list ::= IDENTIFIER:id
