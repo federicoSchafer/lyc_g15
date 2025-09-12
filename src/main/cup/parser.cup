@@ -4,6 +4,8 @@ import java_cup.runtime.*;
 import lyc.compiler.model.*;
 import java.util.*;
 
+class Parser;
+
 parser code {:
     public SymbolTableGenerator symbolTable = new SymbolTableGenerator(); //Objeto global para la tabla de simbolos
 :}
