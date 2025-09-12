@@ -78,8 +78,11 @@ StringLiteral  = \"({Letter}|{Digit})*\" //Strings alfanumericos hasta 50 caract
 ")"   { return symbol(ParserSym.CLOSE_BRACKET); }
 ","   { return symbol(ParserSym.COMMA); }
 ":"   { return symbol(ParserSym.COLON); }
+";"   { return symbol(ParserSym.SEMICOLON); }
 "{"   { return symbol(ParserSym.OPEN_BRACE); }
 "}"   { return symbol(ParserSym.CLOSE_BRACE); }
+"["   { return symbol(ParserSym.OPEN_SQUARE_BRACKET); }
+"]"   { return symbol(ParserSym.CLOSE_SQUARE_BRACKET); }
 
 /* === Identificadores === */
 {Identifier} {
@@ -94,11 +97,11 @@ StringLiteral  = \"({Letter}|{Digit})*\" //Strings alfanumericos hasta 50 caract
     try {
             int value = Integer.parseInt(yytext());
             if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) { //Valido enteros de hasta 16 bits
-                throw new InvalidIntegerException("Constante fuera de rango: " + yytext());
+                throw new InvalidNumericException("Constante fuera de rango: " + yytext());
             }
             return symbol(ParserSym.INTEGER_CONSTANT, value);
         } catch (NumberFormatException ex) {
-            throw new InvalidIntegerException("Constante inválida: " + yytext());
+            throw new InvalidNumericException("Constante inválida: " + yytext());
         }
 }
 
@@ -107,11 +110,11 @@ StringLiteral  = \"({Letter}|{Digit})*\" //Strings alfanumericos hasta 50 caract
     try {
         double value = Double.parseDouble(yytext());
         if (value > Float.MAX_VALUE || value < -Float.MAX_VALUE) { //VaLido Floats de hasta 32 bits
-            throw new InvalidIntegerException("Constante flotante fuera de rango: " + yytext());
+            throw new InvalidNumericException("Constante flotante fuera de rango: " + yytext());
         }
         return symbol(ParserSym.FLOAT_CONSTANT, (float) value);
     } catch (NumberFormatException ex) {
-        throw new InvalidIntegerException("Constante flotante inválida: " + yytext());
+        throw new InvalidNumericException("Constante flotante inválida: " + yytext());
     }
 }
 

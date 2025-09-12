@@ -12,7 +12,8 @@ parser code {:
 // ===== Símbolos terminales =====
 terminal ASSIG, PLUS, SUB, MULT, DIV, OPEN_BRACKET, CLOSE_BRACKET, COMMA, LESS_THAN,
     GREATER_THAN, LESS_THAN_EQUAL, GREATER_THAN_EQUAL, DOBLE_EQUAL, COLON, OPEN_BRACE,
-    CLOSE_BRACE, AND, OR, NOT, INT, BOOLEAN, STRING, FLOAT, INIT, WHILE, IF, ELSE, READ, WRITE, EQUAL_EXP, TRIANG_AREA_MAX;
+    CLOSE_BRACE, AND, OR, NOT, INT, BOOLEAN, STRING, FLOAT, INIT, WHILE, IF, ELSE, READ, WRITE, EQUAL_EXP, TRIANG_AREA_MAX,
+    OPEN_SQUARE_BRACKET, SEMICOLON, CLOSE_SQUARE_BRACKET;
 terminal IDENTIFIER;
 terminal STRING_CONSTANT;
 terminal INTEGER_CONSTANT;
@@ -26,10 +27,10 @@ non terminal program, statements, statement;
 non terminal decl, var_decl;
 non terminal id_list;
 non terminal type, assignment;
-non terminal expr, term, unary_expr, factor;
-non terminal while, if, reader, write, equalexpressions, triangleareamaximum,
+non terminal expr, term, unary_expr, factor, expr_list;
+non terminal while, if, read, write, equalexpressions,
     condition, simple_condition;
-
+non terminal triangleareamaximum, triangle, coordinate, coord_list;
 // ===== Precedencia =====
 precedence left PLUS, SUB;
 precedence left MULT, DIV;
@@ -55,7 +56,7 @@ statements ::= /* vacío */
 statement ::= assignment {: System.out.println("[RULE] statement -> assignment"); :}
               | while {: System.out.println("[RULE] statement -> while"); :}
               | if {: System.out.println("[RULE] statement -> if"); :}
-              | reader {: System.out.println("[RULE] statement -> reader"); :}
+              | read {: System.out.println("[RULE] statement -> reader"); :}
               | write {: System.out.println("[RULE] statement -> write"); :}
               | equalexpressions {: System.out.println("[RULE] statement -> equalexpressions"); :}
               | triangleareamaximum {: System.out.println("[RULE] statement -> triangleareamaximum"); :};
@@ -101,7 +102,49 @@ if ::=
          | IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE
            {: System.out.println("[RULE] if -> IF( condition ) { statements }"); :};
 
-// ---- Reader, Write, equalExpressions, TriangkeAreaMaximum
+
+// ---- Read / Write ----
+read ::= READ IDENTIFIER
+         {: System.out.println("[RULE] reader -> read IDENTIFIER"); :} ;
+
+write ::= WRITE expr
+       {: System.out.println("[RULE] write -> write expr"); :} ;
+
+
+// ---- EqualExpressions ----
+equalexpressions ::= IDENTIFIER ASSIG EQUAL_EXP OPEN_BRACKET expr_list CLOSE_BRACKET
+    {:
+        System.out.println("[RULE] equalexpressions -> IDENTIFIER = EQUAL_EXP( expr_list )");
+    :};
+
+// ---- Lista de expresiones ----
+expr_list ::= expr:e
+    {:
+        System.out.println("[RULE] expr_list -> expr");
+    :}
+    | expr_list:l COMMA expr:e
+    {:
+        System.out.println("[RULE] expr_list -> expr_list, expr");
+    :};
+
+// ---- TriangleAreaMaximum ----
+triangleareamaximum ::= IDENTIFIER ASSIG TRIANG_AREA_MAX OPEN_BRACKET triangle SEMICOLON triangle CLOSE_BRACKET
+                       {: System.out.println("[RULE] triangleareamaximum -> IDENTIFIER = triangleAreaMaximum( triangle ; triangle )"); :} ;
+
+// ---- Triángulo (definido por 3 coordenadas) ----
+triangle ::= OPEN_SQUARE_BRACKET coord_list CLOSE_SQUARE_BRACKET
+            {: System.out.println("[RULE] triangle -> [ coord_list ]"); :} ;
+
+// ---- Lista de coordenadas (3 coordenadas para un triángulo) ----
+coord_list ::= coordinate
+              {: System.out.println("[RULE] coord_list -> coordinate"); :}
+             | coord_list SEMICOLON coordinate
+              {: System.out.println("[RULE] coord_list -> coord_list ; coordinate"); :} ;
+
+// ---- Coordenada (x,y) ----
+coordinate ::= expr COMMA expr
+              {: System.out.println("[RULE] coordinate -> expr , expr"); :} ;
+
 
 // ---- Asignaciones ----
 assignment ::= IDENTIFIER ASSIG expr

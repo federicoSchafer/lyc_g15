@@ -76,7 +76,7 @@ public class ParserTest {
     
     @Test
     public void lexerErrorIntegerOverflow() {
-        assertThrows(InvalidIntegerException.class, () -> {
+        assertThrows(InvalidNumericException.class, () -> {
             scan("x = 2147483648;"); // Integer.MAX_VALUE + 1
         });
     }

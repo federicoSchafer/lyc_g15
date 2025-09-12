@@ -2,7 +2,7 @@ package lyc.compiler;
 
 import lyc.compiler.factories.LexerFactory;
 import lyc.compiler.model.CompilerException;
-import lyc.compiler.model.InvalidIntegerException;
+import lyc.compiler.model.InvalidNumericException;
 import lyc.compiler.model.InvalidLengthException;
 import lyc.compiler.model.UnknownCharacterException;
 import org.apache.commons.text.CharacterPredicates;
@@ -48,7 +48,7 @@ public class LexerTest {
 
 @Test
 public void invalidIntegerConstantOverflow() {
-    assertThrows(InvalidIntegerException.class, () -> {
+    assertThrows(InvalidNumericException.class, () -> {
         scan("9223372036854775807");  // Número que excede Integer.MAX_VALUE
         nextToken();
     });
