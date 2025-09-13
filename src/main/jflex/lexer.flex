@@ -48,7 +48,7 @@ StringLiteral  = \"({Letter}|{Digit}|{Whitespace})*\" //Strings alfanumericos ha
 
 /* === Palabras reservadas === */
 "Int"            { return symbol(ParserSym.INT); }
-"Boolean"        { return symbol(ParserSym.BOOLEAN); } //A chequear, la funcion expressionsEqual devuelte true o false
+"Boolean"        { return symbol(ParserSym.BOOLEAN); }
 "Float"          { return symbol(ParserSym.FLOAT); }
 "String"         { return symbol(ParserSym.STRING); }
 "init"           { return symbol(ParserSym.INIT); }
@@ -105,7 +105,6 @@ StringLiteral  = \"({Letter}|{Digit}|{Whitespace})*\" //Strings alfanumericos ha
         }
 }
 
-//To do: Hacer InvalidFloatException
 {FloatConst} {
     try {
         double value = Double.parseDouble(yytext());
@@ -134,7 +133,6 @@ StringLiteral  = \"({Letter}|{Digit}|{Whitespace})*\" //Strings alfanumericos ha
 {Whitespace}       { /* ignorar */ }
 {LineTerminator}   { /* ignorar */ }
 
-//To do: Hacer excepciones de EOF inesperado y anidamiento no permitido
 "#+" {
     commentLevel = 1;
     yybegin(COMMENT);
