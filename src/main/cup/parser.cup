@@ -106,11 +106,11 @@ if ::=
 
 
 // ---- Read / Write ----
-read ::= READ IDENTIFIER
-         {: System.out.println("[RULE] reader -> read IDENTIFIER"); :} ;
+read ::= READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET
+         {: System.out.println("[RULE] reader -> read ( IDENTIFIER )"); :} ;
 
-write ::= WRITE expr
-       {: System.out.println("[RULE] write -> write expr"); :} ;
+write ::= WRITE OPEN_BRACKET expr CLOSE_BRACKET
+       {: System.out.println("[RULE] write -> write ( expr )"); :} ;
 
 
 // ---- EqualExpressions ----

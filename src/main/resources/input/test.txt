@@ -1,3 +1,279 @@
-init{
-    a, b, c : Int
+#+ 
+   Archivo de pruebas para el compilador LyC
+   Incluye todos los casos requeridos y funciones especiales
++#
+
+#+ Declaración de variables en bloque init +#
+init {
+    a1, b1, x, y, z : Float
+    variable1, a, b, c : Int
+    p1, p2, p3, mensaje : String
+    resultado, flag : Boolean
 }
+
+#+ ===== ASIGNACIONES BÁSICAS ===== +#
+
+#+ Asignaciones con diferentes formatos de flotantes +#
+a1 = 99999.99
+b1 = 99.
+x = .9999
+
+#+ Asignaciones de strings +#
+p1 = "sdADaSjfladfg"
+p2 = "asldk  fh sjf"
+p3 = "Hola mundo 123"
+
+#+ Asignaciones de enteros +#
+a = 5
+b = 10
+variable1 = -32767
+
+#+ ===== OPERACIONES ARITMÉTICAS ===== +#
+
+#+ Diferentes operaciones aritméticas +#
+x = 27 - variable1
+y = a + 500
+z = 34 * 3
+b1 = y / 2.5
+
+#+ Operaciones más complejas +#
+a = a + b * 2
+x = (a1 + b1) / 3.14
+variable1 = a - b + variable1
+
+#+ ===== ESTRUCTURAS DE CONTROL - WHILE ===== +#
+
+#+ Ejemplo básico de while +#
+a = 1
+b = 3
+while (a < b)
+{
+    write("a es menor que b")
+    a = a + 1
+}
+
+#+ While con condición más compleja +#
+a = 10
+b = 5
+while (a > b)
+{
+    write("a es mas grande que b")
+    a = a - 1
+}
+
+#+ ===== ESTRUCTURAS DE CONTROL - IF/ELSE ===== +#
+
+#+ If-else básico +#
+if (a > b)
+{
+    write("a es mas grande que b")
+}
+else
+{
+    write("a es mas chico o igual a b")
+}
+
+#+ If simple +#
+if (variable1 > 0)
+{
+    write("Variable positiva")
+}
+
+#+ If-else con operaciones +#
+if (x + y > z)
+{
+    mensaje = "Suma mayor"
+    write(mensaje)
+}
+else
+{
+    mensaje = "Suma menor o igual"
+    write(mensaje)
+}
+
+#+ ===== CONDICIONES MÚLTIPLES ===== +#
+
+#+ Ejemplo AND +#
+a = 1
+b = 1
+c = 2
+if (a > b AND c > b)
+{
+    write("a es mas grande que b y c es mas grande que b")
+}
+
+#+ Ejemplo OR +#
+a = 1
+b = 1
+c = 2
+if (a > b OR c > b)
+{
+    write("a es mas grande que b o c es mas grande que b")
+}
+
+#+ Ejemplo NOT +#
+a = 1
+b = 1
+c = 2
+if (NOT a > b)
+{
+    write("a no es mas grande que b")
+}
+
+#+ Condicion más complejas +#
+if (a <= b AND c >= variable1)
+{
+    write("Condicion compleja cumplida")
+}
+
+
+#+ Lectura de variables +#
+read (a)
+read (b1)
+read (p1)
+
+#+ Escritura de diferentes tipos +#
+write("Esta es una constante string")
+write(variable1)
+write(x + y)
+write(a * b + c)
+
+
+#+ ===== COMENTARIOS ANIDADOS ===== +#
+#+
+   Este es un comentario de múltiples líneas
+   #+ Y aquí hay un comentario anidado +#
+   Fin del comentario principal
++#
+
+#+ ===== FUNCIONES ESPECIALES ===== +#
+
+#+ FUNCIÓN equalExpressions - Casos TRUE +#
+resultado = equalExpressions(a + b, 15, c * 2, 3 + 12, a + b)
+#+ Debería ser TRUE: múltiples expresiones iguales +#
+
+flag = equalExpressions(5, 2 + 3, 10 / 2)
+#+ Debería ser TRUE: todas las expresiones valen 5 +#
+
+resultado = equalExpressions(x, y, x + 0., y * 1.)
+#+ TRUE si x == y +#
+
+#+ FUNCIÓN equalExpressions - Casos FALSE +#
+flag = equalExpressions(1, 2, 3, 4, 5)
+#+ FALSE: todos diferentes +#
+
+resultado = equalExpressions(a, b + 1, c - 2, variable1 + 10)
+#+ FALSE: probablemente todos diferentes +#
+
+#+ FUNCIÓN triangleAreaMaximum - Casos básicos +#
+z = 2.
+x = 3.8
+
+#+ Caso del ejemplo de la consigna +#
+y = triangleAreaMaximum([0.,x; 4.,12.5; 2.5,3.]; [x,0.; 6.,0.; z,2.])
+#+ Debería calcular las áreas y devolver la mayor +#
+
+#+ Triángulos con coordenadas enteras +#
+b1 = triangleAreaMaximum([0,0; 3,0; 0,4]; [1,1; 4,1; 1,5])
+
+#+ Triángulos con variables y constantes mezcladas +#
+x = triangleAreaMaximum([a,b; c,variable1; 0.7,0.5]; [1.5,2.5; 3.,4.; 5.5,6.5])
+
+
+#+ ===== CASOS ADICIONALES COMPLEJOS ===== +#
+
+#+ While con condiciones múltiples +#
+a = 0
+b = 10
+while (a < b AND a > -1)
+{
+    write(a)
+    a = a + 1
+    if (a == 5)
+    {
+        write("Llegamos a 5")
+    }
+}
+
+#+ If anidados +#
+if (a > 0)
+{
+    if (b > a)
+    {
+        if (c > b)
+        {
+            write("c es el mayor")
+        }
+        else
+        {
+            write("b es mayor que a pero c no es mayor que b")
+        }
+    }
+    else
+    {
+        write("a es mayor o igual que b")
+    }
+}
+else
+{
+    write("a no es positivo")
+}
+
+#+ Expresiones aritméticas complejas +#
+a = (b + c) * 2 - variable1
+x = (y + z) / (a + 1.)
+b1 = x * y - z / 2.5 + a1
+
+#+ Uso de diferentes operadores de comparación +#
+if (a >= b)
+{
+    write("a mayor o igual que b")
+}
+
+if (x <= y)
+{
+    write("x menor o igual que y")
+}
+
+if (a == b)
+{
+    write("a igual a b")
+}
+
+#+ Casos límite con constantes +#
+variable1 = 32767  #+ Máximo valor para Int de 16 bits +#
+a = -32767         #+ Mínimo valor para Int de 16 bits +#
+x = 75.12345678   #+ Cerca del máximo para Float de 32 bits +#
+
+#+ Strings con diferentes contenidos +#
+p1 = "1234567890"
+p2 = "ABCDEFGHIJ"
+p3 = "Texto con espacios y numeros 123"
+
+#+ Verificación final con funciones especiales +#
+resultado = equalExpressions(1 + 1, 2, 4 / 2, 3 - 1)
+write(resultado)  #+ Debería mostrar true +#
+
+a1 = triangleAreaMaximum([0,0; 1,0; 0,1]; [0,0; 2,0; 0,2])
+write(a1)  #+ Debería mostrar 2.0 (área del segundo triángulo) +#
+
+#+ Final del archivo de pruebas +#
+write("Fin de las pruebas del compilador LyC")
+
+
+#+ CASOS DE ERROR COMENTADOS - NO DEBEN PROCESARSE +#
+#+ ERROR: Variable no declarada +#
+#+ undeclared_var = 5 +#
+
+#+ ERROR: Identificador demasiado largo +#
+#+ variable_con_nombre_extremadamente_largo_que_excede_limite = 5 +#
+
+#+ ERROR: Constante fuera de rango +#
+#+ a = 99999 +#
+
+#+ ERROR: String demasiado largo +#
+#+ p1 = "Esta es una string que tiene más de cincuenta caracteres y debería generar error" +#
+
+#+ ERROR: Sintaxis incorrecta +#
+#+ resultado = equalExpressions() +#
+#+ a1 = triangleAreaMaximum([1,2]) +#

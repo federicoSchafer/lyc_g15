@@ -41,8 +41,8 @@ Digit          = [0-9]
 
 Identifier     = {Letter}({Letter}|{Digit})*
 IntegerConst   = {Digit}+
-FloatConst     = ({Digit}+)?\.{Digit}+ //
-StringLiteral  = \"({Letter}|{Digit})*\" //Strings alfanumericos hasta 50 caracteres
+FloatConst = {Digit}+\.{Digit}*|\.{Digit}+
+StringLiteral  = \"({Letter}|{Digit}|{Whitespace})*\" //Strings alfanumericos hasta 50 caracteres
 
 %%
 
