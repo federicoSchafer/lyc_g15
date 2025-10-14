@@ -49,8 +49,8 @@ start with program;
 program ::= decl statements {: System.out.println("[RULE] program -> decl statements"); :} ;
 
 // ---- Lista de statements ----
-statements ::= /* vacío */
-               {: System.out.println("[RULE] statements -> "); :}
+statements ::= statement
+               {: System.out.println("[RULE] statements -> statement"); :}
                | statements statement
                {: System.out.println("[RULE] statements -> statements statement"); :} ;
 
@@ -71,12 +71,12 @@ decl ::= INIT OPEN_BRACE var_decl CLOSE_BRACE
 var_decl ::= id_list:l COLON type:t
              {:
                 System.out.println("[RULE] var_decl -> id_list : type");
-                symbolTable.addVariables((List<Object>) l);  // Recibe List<Object>
+                symbolTable.addVariables((List<Object>) l, (Object) t);  // Recibe List<Object>
              :}
            | id_list:l COLON type:t var_decl:vd
              {:
                 System.out.println("[RULE] var_decl -> id_list : type var_decl");
-                symbolTable.addVariables((List<Object>) l);  // Recibe List<Object>
+                symbolTable.addVariables((List<Object>) l, (Object) t);  // Recibe List<Object>
              :};
 
 // ---- Lista de identificadores ----
@@ -138,10 +138,8 @@ triangle ::= OPEN_SQUARE_BRACKET coord_list CLOSE_SQUARE_BRACKET
             {: System.out.println("[RULE] triangle -> [ coord_list ]"); :} ;
 
 // ---- Lista de coordenadas (3 coordenadas para un triángulo) ----
-coord_list ::= coordinate
-              {: System.out.println("[RULE] coord_list -> coordinate"); :}
-             | coord_list SEMICOLON coordinate
-              {: System.out.println("[RULE] coord_list -> coord_list ; coordinate"); :} ;
+coord_list ::= coordinate SEMICOLON coordinate SEMICOLON coordinate
+              {: System.out.println("[RULE] coord_list -> coordinate; coordinate; coordinate"); :};
 
 // ---- Coordenada (x,y) ----
 coordinate ::= expr COMMA expr
@@ -202,23 +200,31 @@ unary_expr ::= SUB factor
 // ---- Factores ----
 factor ::= INTEGER_CONSTANT:i
          {: System.out.println("[RULE] factor -> INTEGER_CONSTANT");
-            symbolTable.addConstant(i, i);
+            symbolTable.addConstant(i, i, "int");
          :}
          | IDENTIFIER
          {: System.out.println("[RULE] factor -> IDENTIFIER"); :}
          | FLOAT_CONSTANT:f
          {: System.out.println("[RULE] factor -> FLOAT_CONSTANT");
-           symbolTable.addConstant(f, f);
+           symbolTable.addConstant(f, f, "float");
          :}
          | STRING_CONSTANT:s
          {: System.out.println("[RULE] factor -> STRING_CONSTANT");
-           symbolTable.addConstant(s, s);
+           symbolTable.addConstant(s, s, "string");
          :}
          | OPEN_BRACKET expr CLOSE_BRACKET
          {: System.out.println("[RULE] factor -> (expr)"); :} ;
 
 // ---- Tipos ----
-type ::= INT             {: System.out.println("[RULE] type -> INT"); :}
-       | BOOLEAN         {: System.out.println("[RULE] type -> BOOLEAN"); :}
-       | FLOAT           {: System.out.println("[RULE] type -> FLOAT"); :}
-       | STRING          {: System.out.println("[RULE] type -> STRING"); :};
+type ::= INT             {: System.out.println("[RULE] type -> INT");
+                               RESULT = "int";
+                         :}
+       | BOOLEAN         {: System.out.println("[RULE] type -> BOOLEAN");
+                               RESULT = "boolean";
+                         :}
+       | FLOAT           {: System.out.println("[RULE] type -> FLOAT");
+                               RESULT = "float";
+                         :}
+       | STRING          {: System.out.println("[RULE] type -> STRING");
+                               RESULT = "string";
+                         :};
