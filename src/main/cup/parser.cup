@@ -1,13 +1,27 @@
 package lyc.compiler;
-import lyc.compiler.files.SymbolTableGenerator;
+
 import java_cup.runtime.*;
-import lyc.compiler.model.*;
 import java.util.*;
+import java.util.Stack;
+import lyc.compiler.model.*;
+import lyc.compiler.files.ArbolSintactico;
+import lyc.compiler.files.Nodo;
+import lyc.compiler.files.DotFileGenerator;
+import lyc.compiler.files.SymbolTableGenerator;
 
 class Parser;
 
 parser code {:
-    public SymbolTableGenerator symbolTable = new SymbolTableGenerator(); //Objeto global para la tabla de simbolos
+    public SymbolTableGenerator symbolTable = new SymbolTableGenerator();
+    public DotFileGenerator syntaxTree;
+    public Nodo ptrF;
+    public Nodo ptrE;
+    public Nodo ptrT;
+    public Nodo ptrU;
+    public Nodo ptrA;
+    Stack<Nodo> pilaE = new Stack<>();
+    Stack<Nodo> pilaT = new Stack<>();
+
 :}
 
 
@@ -147,8 +161,11 @@ coordinate ::= expr COMMA expr
 
 
 // ---- Asignaciones ----
-assignment ::= IDENTIFIER ASSIG expr
-                {: System.out.println("[RULE] assignment -> IDENTIFIER = expr"); :} ;
+assignment ::= IDENTIFIER:id ASSIG expr
+                {: System.out.println("[RULE] assignment -> IDENTIFIER = expr");
+                    ptrA = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja(id), ptrE);
+                    syntaxTree = new DotFileGenerator(ptrA); //Esta linea genera el archivoDot (cambiarla de lugar segun lo que se desee probar)
+                :} ;
 
 // ---- Contion ----
 condition ::= simple_condition
@@ -174,46 +191,75 @@ simple_condition ::= expr GREATER_THAN expr
 
 
 // ---- Expresiones ----
-expr ::= expr PLUS term
-       {: System.out.println("[RULE] expr -> expr + term"); :}
-       | expr SUB term
-       {: System.out.println("[RULE] expr -> expr - term"); :}
+expr ::= expr {: pilaE.push(ptrE); :} PLUS term
+       {: System.out.println("[RULE] expr -> expr + term");
+          ptrE = pilaE.pop();
+          ptrE = ArbolSintactico.crearNodo("+", ptrE, ptrT);
+       :}
+       | expr {: pilaE.push(ptrE); :} SUB term
+       {: System.out.println("[RULE] expr -> expr - term");
+         ptrE = pilaE.pop();
+         ptrE = ArbolSintactico.crearNodo("-", ptrE, ptrT);
+       :}
        | term
-       {: System.out.println("[RULE] expr -> term"); :} ;
+       {: System.out.println("[RULE] expr -> term");
+          ptrE = ptrT;
+       :} ;
 
 // ---- Términos ----
-term ::= term MULT unary_expr
-       {: System.out.println("[RULE] term -> term * unary_expr"); :}
-       | term DIV unary_expr
-       {: System.out.println("[RULE] term -> term / unary_expr"); :}
+term ::= term {: pilaT.push(ptrT); :} MULT unary_expr
+       {: System.out.println("[RULE] term -> term * unary_expr");
+          ptrT = pilaT.pop();
+          ptrT = ArbolSintactico.crearNodo("*", ptrT, ptrU);
+       :}
+       | term {: pilaT.push(ptrT); :} DIV unary_expr
+       {: System.out.println("[RULE] term -> term / unary_expr");
+         ptrT = pilaT.pop();
+         ptrT = ArbolSintactico.crearNodo("/", ptrT, ptrU);
+       :}
        | unary_expr
-       {: System.out.println("[RULE] term -> unary_expr"); :} ;
+       {: System.out.println("[RULE] term -> unary_expr");
+          ptrT = ptrU;
+       :} ;
 
 // ---- Expresiones unarias ----
 unary_expr ::= SUB factor
-             {: System.out.println("[RULE] unary_expr -> - factor"); :} %prec UMINUS
+             {: System.out.println("[RULE] unary_expr -> - factor");
+                ptrU = ArbolSintactico.crearNodo("U", ArbolSintactico.crearHoja("-"), ptrF);
+             :} %prec UMINUS
              | PLUS factor
-             {: System.out.println("[RULE] unary_expr -> + factor"); :} %prec UMINUS
+             {: System.out.println("[RULE] unary_expr -> + factor");
+               ptrU = ArbolSintactico.crearNodo("U", ArbolSintactico.crearHoja("+"), ptrF);
+             :} %prec UMINUS
              | factor
-             {: System.out.println("[RULE] unary_expr -> factor"); :} ;
+             {: System.out.println("[RULE] unary_expr -> factor");
+                ptrU = ptrF;
+             :} ;
 
 // ---- Factores ----
-factor ::= INTEGER_CONSTANT:i
+factor ::= INTEGER_CONSTANT:cte
          {: System.out.println("[RULE] factor -> INTEGER_CONSTANT");
-            symbolTable.addConstant(i, i, "int");
+            symbolTable.addConstant(cte, cte, "int");
+            ptrF = ArbolSintactico.crearHoja(cte);
          :}
-         | IDENTIFIER
-         {: System.out.println("[RULE] factor -> IDENTIFIER"); :}
-         | FLOAT_CONSTANT:f
+         | IDENTIFIER:id
+         {: System.out.println("[RULE] factor -> IDENTIFIER");
+            ptrF = ArbolSintactico.crearHoja(id);
+         :}
+         | FLOAT_CONSTANT:cte
          {: System.out.println("[RULE] factor -> FLOAT_CONSTANT");
-           symbolTable.addConstant(f, f, "float");
+           symbolTable.addConstant(cte, cte, "float");
+           ptrF = ArbolSintactico.crearHoja(cte);
          :}
-         | STRING_CONSTANT:s
+         | STRING_CONSTANT:cte
          {: System.out.println("[RULE] factor -> STRING_CONSTANT");
-           symbolTable.addConstant(s, s, "string");
+           symbolTable.addConstant(cte, cte, "string");
+           ptrF = ArbolSintactico.crearHoja(cte);
          :}
-         | OPEN_BRACKET expr CLOSE_BRACKET
-         {: System.out.println("[RULE] factor -> (expr)"); :} ;
+         | OPEN_BRACKET expr CLOSE_BRACKET:exp
+         {: System.out.println("[RULE] factor -> (expr)");
+            ptrF = ptrE;
+         :};
 
 // ---- Tipos ----
 type ::= INT             {: System.out.println("[RULE] type -> INT");
