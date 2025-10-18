@@ -19,10 +19,19 @@ parser code {:
     public Nodo ptrT;
     public Nodo ptrU;
     public Nodo ptrA;
-    Stack<Nodo> pilaE = new Stack<>();
-    Stack<Nodo> pilaT = new Stack<>();
-
-:}
+    public Nodo ptrSC;
+    public Nodo ptrC;
+    public Nodo ptrIf;
+    public Nodo ptrStmt;
+    public Nodo ptrStmts;
+    public Nodo ptrStmtsAux;
+    public Nodo ptrSCAux;
+    public Nodo ptrEAux;
+    public Stack<Nodo> pilaE = new Stack<>(); //PilaExpresiones
+    public Stack<Nodo> pilaT = new Stack<>(); //PilaTerminos
+    public Stack<Nodo> pilaS = new Stack<>(); //PilaStatements
+    public Stack<Nodo> pilaC = new Stack<>(); //PilaConditions
+ :}
 
 
 // ===== Símbolos terminales =====
@@ -60,18 +69,29 @@ start with program;
 // ===========================
 
 // ---- Programa ----
-program ::= decl statements {: System.out.println("[RULE] program -> decl statements"); :} ;
+program ::= decl statements {: System.out.println("[RULE] program -> decl statements");
+                               syntaxTree = new DotFileGenerator(ptrStmts); //Esta linea genera el archivoDot (cambiarla de lugar segun lo que se desee probar)
+                            :} ;
 
 // ---- Lista de statements ----
 statements ::= statement
-               {: System.out.println("[RULE] statements -> statement"); :}
-               | statements statement
-               {: System.out.println("[RULE] statements -> statements statement"); :} ;
+               {: System.out.println("[RULE] statements -> statement");
+                  ptrStmts = ptrStmt;
+               :}
+               | statements {: pilaS.push(ptrStmts); :} statement
+               {: System.out.println("[RULE] statements -> statements statement");
+                  ptrStmts = pilaS.pop();
+                  ptrStmts = ArbolSintactico.crearNodo("S", ptrStmts, ptrStmt);
+               :};
 
 // ---- Statement ----
-statement ::= assignment {: System.out.println("[RULE] statement -> assignment"); :}
+statement ::= assignment {: System.out.println("[RULE] statement -> assignment");
+                           ptrStmt = ptrA;
+                         :}
               | while {: System.out.println("[RULE] statement -> while"); :}
-              | if {: System.out.println("[RULE] statement -> if"); :}
+              | if {: System.out.println("[RULE] statement -> if");
+                      ptrStmt = ptrIf;
+                   :}
               | read {: System.out.println("[RULE] statement -> reader"); :}
               | write {: System.out.println("[RULE] statement -> write"); :}
               | equalexpressions {: System.out.println("[RULE] statement -> equalexpressions"); :}
@@ -113,10 +133,17 @@ while ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE
 
 // ---- If -----
 if ::=
-           IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE ELSE OPEN_BRACE statements CLOSE_BRACE
-           {: System.out.println("[RULE] if -> IF( condition ) { statements } ELSE { statements }"); :}
+           IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE {: ptrStmtsAux = ptrStmts; :} ELSE OPEN_BRACE statements CLOSE_BRACE
+           {: System.out.println("[RULE] if -> IF( condition ) { statements } ELSE { statements }");
+              Nodo ptrCuerpo = ArbolSintactico.crearNodo("Cuerpo", ptrStmtsAux, ptrStmts);
+              ptrC = pilaC.pop();
+              ptrIf = ArbolSintactico.crearNodo("IF", ptrC, ptrCuerpo);
+           :}
          | IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE
-           {: System.out.println("[RULE] if -> IF( condition ) { statements }"); :};
+           {: System.out.println("[RULE] if -> IF( condition ) { statements }");
+              ptrC = pilaC.pop();
+              ptrIf = ArbolSintactico.crearNodo("IF", ptrC, ptrStmts);
+           :};
 
 
 // ---- Read / Write ----
@@ -162,31 +189,54 @@ coordinate ::= expr COMMA expr
 
 // ---- Asignaciones ----
 assignment ::= IDENTIFIER:id ASSIG expr
-                {: System.out.println("[RULE] assignment -> IDENTIFIER = expr");
+                {:  System.out.println("[RULE] assignment -> IDENTIFIER = expr");
+                    if(! symbolTable.findVariable(id)){
+                        System.out.println("La variable " + id.toString() + " no se encuentra delcarada"); //Cambiar a excepcion
+                    }
                     ptrA = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja(id), ptrE);
-                    syntaxTree = new DotFileGenerator(ptrA); //Esta linea genera el archivoDot (cambiarla de lugar segun lo que se desee probar)
                 :} ;
 
 // ---- Contion ----
 condition ::= simple_condition
-              {: System.out.println("[RULE] condition -> simple_condition"); :}
-            | simple_condition AND simple_condition
-              {: System.out.println("[RULE] condition -> simple_condition AND simple_condition"); :}
-            | simple_condition OR simple_condition
-              {: System.out.println("[RULE] condition -> simple_condition OR simple_condition"); :}
+              {: System.out.println("[RULE] condition -> simple_condition");
+                 ptrC = ptrSC;
+                 pilaC.push(ptrC);
+              :}
+            | simple_condition {: ptrSCAux = ptrSC; :} AND simple_condition
+              {: System.out.println("[RULE] condition -> simple_condition AND simple_condition");
+                 ptrC = ArbolSintactico.crearNodo("AND", ptrSCAux, ptrSC);
+                 pilaC.push(ptrC);
+              :}
+            | simple_condition {: ptrSCAux = ptrSC; :} OR simple_condition
+              {: System.out.println("[RULE] condition -> simple_condition OR simple_condition");
+                 ptrC = ArbolSintactico.crearNodo("OR", ptrSCAux, ptrSC);
+                 pilaC.push(ptrC);
+              :}
             | NOT simple_condition
-              {: System.out.println("[RULE] condition -> NOT simple_condition"); :};
+              {: System.out.println("[RULE] condition -> NOT simple_condition");
+                 ptrC = ArbolSintactico.crearNodo("NC", ArbolSintactico.crearHoja("NOT"), ptrSC); //NC = Nodo dummy
+              :};
 
-simple_condition ::= expr GREATER_THAN expr
-                     {: System.out.println("[RULE] simple_condition -> expr > expr"); :}
-                   | expr LESS_THAN expr
-                     {: System.out.println("[RULE] simple_condition -> expr < expr"); :}
-                   | expr LESS_THAN_EQUAL expr
-                     {: System.out.println("[RULE] simple_condition -> expr <= expr"); :}
-                   | expr GREATER_THAN_EQUAL expr
-                     {: System.out.println("[RULE] simple_condition -> expr >= expr"); :}
-                   | expr DOBLE_EQUAL expr
-                     {: System.out.println("[RULE] simple_condition -> expr == expr"); :};
+simple_condition ::= expr {: ptrEAux = ptrE; :} GREATER_THAN expr
+                     {: System.out.println("[RULE] simple_condition -> expr > expr");
+                        ptrSC = ArbolSintactico.crearNodo(">", ptrEAux, ptrE);
+                     :}
+                   | expr {: ptrEAux = ptrE; :} LESS_THAN expr
+                     {: System.out.println("[RULE] simple_condition -> expr < expr");
+                        ptrSC = ArbolSintactico.crearNodo("<", ptrEAux, ptrE);
+                     :}
+                   | expr {: ptrEAux = ptrE; :} LESS_THAN_EQUAL expr
+                     {: System.out.println("[RULE] simple_condition -> expr <= expr");
+                        ptrSC = ArbolSintactico.crearNodo("<=", ptrEAux, ptrE);
+                     :}
+                   | expr {: ptrEAux = ptrE; :} GREATER_THAN_EQUAL expr
+                     {: System.out.println("[RULE] simple_condition -> expr >= expr");
+                        ptrSC = ArbolSintactico.crearNodo(">=", ptrEAux, ptrE);
+                     :}
+                   | expr {: ptrEAux = ptrE; :} DOBLE_EQUAL expr
+                     {: System.out.println("[RULE] simple_condition -> expr == expr");
+                        ptrSC = ArbolSintactico.crearNodo("==", ptrEAux, ptrE);
+                     :};
 
 
 
@@ -225,7 +275,7 @@ term ::= term {: pilaT.push(ptrT); :} MULT unary_expr
 // ---- Expresiones unarias ----
 unary_expr ::= SUB factor
              {: System.out.println("[RULE] unary_expr -> - factor");
-                ptrU = ArbolSintactico.crearNodo("U", ArbolSintactico.crearHoja("-"), ptrF);
+                ptrU = ArbolSintactico.crearNodo("U", ArbolSintactico.crearHoja("-"), ptrF); //U = Nodo Dummy
              :} %prec UMINUS
              | PLUS factor
              {: System.out.println("[RULE] unary_expr -> + factor");
@@ -244,6 +294,9 @@ factor ::= INTEGER_CONSTANT:cte
          :}
          | IDENTIFIER:id
          {: System.out.println("[RULE] factor -> IDENTIFIER");
+            if(!symbolTable.findVariable(id)){
+                System.out.println("La variable " + id.toString() + " no se encuentra declarada");
+            }
             ptrF = ArbolSintactico.crearHoja(id);
          :}
          | FLOAT_CONSTANT:cte
