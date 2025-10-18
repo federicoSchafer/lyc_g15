@@ -23,6 +23,11 @@ public class SymbolTableGenerator implements FileGenerator{
         entries.add(new SymbolEntry(symbolName, type, valStr, valStr.length()));
     }
 
+    public boolean findVariable(Object id){
+        String symbolName = "_" + id.toString();
+        return entries.contains(new SymbolEntry(symbolName, null, null, null));
+    }
+
     @Override
     public void generate(FileWriter fileWriter) throws IOException {
         fileWriter.write(String.format("%-15s %-10s %-15s %-10s%n", "Nombre", "TipoDato", "Valor", "Longitud"));
