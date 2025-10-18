@@ -69,8 +69,8 @@ StringLiteral  = \"({Letter}|{Digit}|{Whitespace})*\" //Strings alfanumericos ha
 "-"   { return symbol(ParserSym.SUB); }
 "*"   { return symbol(ParserSym.MULT); }
 "/"   { return symbol(ParserSym.DIV); }
-">"   { return symbol(ParserSym.LESS_THAN); }
-"<"   { return symbol(ParserSym.GREATER_THAN); }
+"<"   { return symbol(ParserSym.LESS_THAN); }
+">"   { return symbol(ParserSym.GREATER_THAN); }
 "<="  { return symbol(ParserSym.LESS_THAN_EQUAL); }
 ">="  { return symbol(ParserSym.GREATER_THAN_EQUAL); }
 "=="  { return symbol(ParserSym.DOBLE_EQUAL); }
