@@ -9,10 +9,10 @@ public class SymbolTableGenerator implements FileGenerator{
 
     public void addVariables(List<Object> names, Object t) {
         for (Object name : names) {
-            String nameStr = name.toString();
-            String symbolName = "_" + nameStr;
+            String value = "";
+            String symbolName = "_" + name.toString();
             String type = t.toString();
-            entries.add(new SymbolEntry(symbolName, type, nameStr, nameStr.length()));
+            entries.add(new SymbolEntry(symbolName, type, value, symbolName.length()));
         }
     }
 
@@ -28,6 +28,17 @@ public class SymbolTableGenerator implements FileGenerator{
         return entries.contains(new SymbolEntry(symbolName, null, null, null));
     }
 
+    public String varType(Object id){
+        String symbolName = "_" + id.toString();
+        for (SymbolEntry entry : entries) {
+            if (entry.getName().equals(symbolName)) {
+                return entry.getType();
+            }
+        }
+        return null;
+    }
+
+
     @Override
     public void generate(FileWriter fileWriter) throws IOException {
         fileWriter.write(String.format("%-15s %-10s %-15s %-10s%n", "Nombre", "TipoDato", "Valor", "Longitud"));
@@ -38,7 +49,11 @@ public class SymbolTableGenerator implements FileGenerator{
         }
     }
 
-    private static class SymbolEntry {
+    public Set<SymbolEntry> getEntries() {
+        return entries;
+    }
+
+    public static class SymbolEntry {
         String name;
         String type;
         String value;
@@ -61,6 +76,18 @@ public class SymbolTableGenerator implements FileGenerator{
         @Override
         public int hashCode() {
             return Objects.hash(name);
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public String getValue() {
+            return value;
         }
     }
 }

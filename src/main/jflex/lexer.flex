@@ -15,7 +15,7 @@ import static lyc.compiler.constants.Constants.*;
 %column
 %throws CompilerException
 %eofval{
-  return symbol(ParserSym.EOF);
+  { return symbol(ParserSym.EOF); }
 %eofval}
 
 %{
@@ -60,8 +60,11 @@ StringLiteral  = \"({Letter}|{Digit}|{Whitespace})*\" //Strings alfanumericos ha
 "AND"            { return symbol(ParserSym.AND); }
 "OR"             { return symbol(ParserSym.OR); }
 "NOT"            { return symbol(ParserSym.NOT); }
+"False"          { return symbol(ParserSym.FALSE); }
+"True"          { return symbol(ParserSym.TRUE); }
 "equalExpressions" { return symbol(ParserSym.EQUAL_EXP); }
 "triangleAreaMaximum" { return symbol(ParserSym.TRIANG_AREA_MAX); }
+"False"          { return symbol(ParserSym.FALSE); }
 
 /* === Operadores y símbolos === */
 "="   { return symbol(ParserSym.ASSIG); }
@@ -74,6 +77,7 @@ StringLiteral  = \"({Letter}|{Digit}|{Whitespace})*\" //Strings alfanumericos ha
 "<="  { return symbol(ParserSym.LESS_THAN_EQUAL); }
 ">="  { return symbol(ParserSym.GREATER_THAN_EQUAL); }
 "=="  { return symbol(ParserSym.DOBLE_EQUAL); }
+"!="  { return symbol(ParserSym.NOT_EQUAL); }
 "("   { return symbol(ParserSym.OPEN_BRACKET); }
 ")"   { return symbol(ParserSym.CLOSE_BRACKET); }
 ","   { return symbol(ParserSym.COMMA); }

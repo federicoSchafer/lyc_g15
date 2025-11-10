@@ -8,12 +8,16 @@ import lyc.compiler.files.ArbolSintactico;
 import lyc.compiler.files.Nodo;
 import lyc.compiler.files.DotFileGenerator;
 import lyc.compiler.files.SymbolTableGenerator;
+import lyc.compiler.files.AssemblerGenerator;
+import lyc.compiler.files.AsmCodeGenerator;
+import lyc.compiler.files.FileOutputWriter;
 
 class Parser;
 
 parser code {:
     public SymbolTableGenerator symbolTable = new SymbolTableGenerator();
     public DotFileGenerator syntaxTree;
+    public AsmCodeGenerator asm;
     public Nodo ptrF;
     public Nodo ptrE;
     public Nodo ptrT;
@@ -27,10 +31,42 @@ parser code {:
     public Nodo ptrStmtsAux;
     public Nodo ptrSCAux;
     public Nodo ptrEAux;
+    public Nodo ptrWhile;
+    public Nodo ptrRead;
+    public Nodo ptrWrite;
+    public Nodo ptrEqExpr;
+    public Nodo ptrTriArMax;
+    public Nodo ptrEqExprsAux4;
+    public Nodo ptrEqExprsAux3;
+    public Nodo ptrEqExprsAux2;
+    public Nodo ptrEqExprsAux1;
+    public Nodo ptrThen;
+    public Nodo ptrCond;
+    public Nodo ptrExprList;
+    public Nodo ptrCondicion;
+    public Nodo ptrFalse;
+    public Nodo ptrMaximumArea;
+    public Nodo ptrX2MenosX1;
+    public Nodo ptrY3MenosY1;
+    public Nodo ptrMult1;
+    public Nodo ptrX3MenosX1;
+    public Nodo ptrY2MenosY1;
+    public Nodo ptrMult2;
+    public Nodo ptrResta;
+    public Nodo ptrDiv;
+    public Nodo ptrArea;
+    public Nodo ptrAreaAux;
+    public Nodo ptrCuerpo;
+    public Nodo ptrAr;
+    public Nodo x1,x2,x3,y1,y2,y3;
+    public Nodo ptrAreaAux1;
+    public Nodo ptrAr2;
+
     public Stack<Nodo> pilaE = new Stack<>(); //PilaExpresiones
     public Stack<Nodo> pilaT = new Stack<>(); //PilaTerminos
     public Stack<Nodo> pilaS = new Stack<>(); //PilaStatements
     public Stack<Nodo> pilaC = new Stack<>(); //PilaConditions
+
  :}
 
 
@@ -38,7 +74,7 @@ parser code {:
 terminal ASSIG, PLUS, SUB, MULT, DIV, OPEN_BRACKET, CLOSE_BRACKET, COMMA, LESS_THAN,
     GREATER_THAN, LESS_THAN_EQUAL, GREATER_THAN_EQUAL, DOBLE_EQUAL, COLON, OPEN_BRACE,
     CLOSE_BRACE, AND, OR, NOT, INT, BOOLEAN, STRING, FLOAT, INIT, WHILE, IF, ELSE, READ, WRITE, EQUAL_EXP, TRIANG_AREA_MAX,
-    OPEN_SQUARE_BRACKET, SEMICOLON, CLOSE_SQUARE_BRACKET;
+    OPEN_SQUARE_BRACKET, SEMICOLON, CLOSE_SQUARE_BRACKET, NOT_EQUAL, FALSE, TRUE;
 terminal IDENTIFIER;
 terminal STRING_CONSTANT;
 terminal INTEGER_CONSTANT;
@@ -55,7 +91,7 @@ non terminal type, assignment;
 non terminal expr, term, unary_expr, factor, expr_list;
 non terminal while, if, read, write, equalexpressions,
     condition, simple_condition;
-non terminal triangleareamaximum, triangle, coordinate, coord_list;
+non terminal triangleareamaximum, triangle, coord_list;
 // ===== Precedencia =====
 precedence left PLUS, SUB;
 precedence left MULT, DIV;
@@ -70,7 +106,10 @@ start with program;
 
 // ---- Programa ----
 program ::= decl statements {: System.out.println("[RULE] program -> decl statements");
-                               syntaxTree = new DotFileGenerator(ptrStmts); //Esta linea genera el archivoDot (cambiarla de lugar segun lo que se desee probar)
+                               syntaxTree = new DotFileGenerator(ptrStmts);
+                               AssemblerGenerator assemblerCode = new AssemblerGenerator(ptrStmts, symbolTable);
+                               String assembler = assemblerCode.generate();
+                               asm = new AsmCodeGenerator(assembler);
                             :} ;
 
 // ---- Lista de statements ----
@@ -88,14 +127,24 @@ statements ::= statement
 statement ::= assignment {: System.out.println("[RULE] statement -> assignment");
                            ptrStmt = ptrA;
                          :}
-              | while {: System.out.println("[RULE] statement -> while"); :}
+              | while {: System.out.println("[RULE] statement -> while");
+                         ptrStmt = ptrWhile;
+                      :}
               | if {: System.out.println("[RULE] statement -> if");
                       ptrStmt = ptrIf;
                    :}
-              | read {: System.out.println("[RULE] statement -> reader"); :}
-              | write {: System.out.println("[RULE] statement -> write"); :}
-              | equalexpressions {: System.out.println("[RULE] statement -> equalexpressions"); :}
-              | triangleareamaximum {: System.out.println("[RULE] statement -> triangleareamaximum"); :};
+              | read {: System.out.println("[RULE] statement -> reader");
+                        ptrStmt = ptrRead;
+                     :}
+              | write {: System.out.println("[RULE] statement -> write");
+                         ptrStmt = ptrWrite;
+                      :}
+              | equalexpressions {: System.out.println("[RULE] statement -> equalexpressions");
+                                    ptrStmt = ptrEqExpr;
+                                 :}
+              | triangleareamaximum {: System.out.println("[RULE] statement -> triangleareamaximum");
+                                       ptrStmt = ptrTriArMax;
+                                    :};
 
 // ---- Declaraciones ----
 decl ::= INIT OPEN_BRACE var_decl CLOSE_BRACE
@@ -116,12 +165,14 @@ var_decl ::= id_list:l COLON type:t
 // ---- Lista de identificadores ----
 id_list ::= IDENTIFIER:s
               {:
+                 System.out.println("[RULE] id_list -> IDENTIFIER");
                  List<Object> list = new ArrayList<>();
                  list.add(s);
                  RESULT = list;
               :}
           | id_list:l COMMA IDENTIFIER:s
               {:
+                 System.out.println("[RULE] id_list -> , IDENTIFIER");
                  List<Object> list = (List<Object>) l; // casteo explícito
                  list.add(s);
                  RESULT = list;
@@ -129,11 +180,13 @@ id_list ::= IDENTIFIER:s
 
 // ---- While ----
 while ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE
-    {: System.out.println("[RULE] while -> WHILE( condition ) { statements }"); :} ;
+    {: System.out.println("[RULE] while -> WHILE( condition ) { statements }");
+       ptrC = pilaC.pop();
+       ptrWhile = ArbolSintactico.crearNodo("WHILE", ptrC, ptrStmts);
+    :} ;
 
 // ---- If -----
-if ::=
-           IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE {: ptrStmtsAux = ptrStmts; :} ELSE OPEN_BRACE statements CLOSE_BRACE
+if ::=     IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_BRACE statements CLOSE_BRACE {: ptrStmtsAux = ptrStmts; :} ELSE OPEN_BRACE statements CLOSE_BRACE
            {: System.out.println("[RULE] if -> IF( condition ) { statements } ELSE { statements }");
               Nodo ptrCuerpo = ArbolSintactico.crearNodo("Cuerpo", ptrStmtsAux, ptrStmts);
               ptrC = pilaC.pop();
@@ -147,54 +200,120 @@ if ::=
 
 
 // ---- Read / Write ----
-read ::= READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET
-         {: System.out.println("[RULE] reader -> read ( IDENTIFIER )"); :} ;
+read ::= READ OPEN_BRACKET IDENTIFIER:id CLOSE_BRACKET
+         {: System.out.println("[RULE] reader -> read ( IDENTIFIER )");
+            if(!symbolTable.findVariable(id)){
+                throw new RuntimeException("La variable " + id.toString() + " no se encuentra declarada");
+            }
+            ptrRead = ArbolSintactico.crearNodo("Read", ArbolSintactico.crearHoja(id));
+         :} ;
 
 write ::= WRITE OPEN_BRACKET expr CLOSE_BRACKET
-       {: System.out.println("[RULE] write -> write ( expr )"); :} ;
+       {: System.out.println("[RULE] write -> write ( expr )");
+          ptrWrite = ArbolSintactico.crearNodo("Write", ptrE);
+       :} ;
 
 
 // ---- EqualExpressions ----
-equalexpressions ::= IDENTIFIER ASSIG EQUAL_EXP OPEN_BRACKET expr_list CLOSE_BRACKET
+equalexpressions ::= IDENTIFIER:id ASSIG EQUAL_EXP OPEN_BRACKET expr_list CLOSE_BRACKET
     {:
         System.out.println("[RULE] equalexpressions -> IDENTIFIER = EQUAL_EXP( expr_list )");
+        if(!symbolTable.findVariable(id)){
+            throw new RuntimeException("La variable " + id.toString() + " no se encuentra declarada");
+        }
+        String type;
+        type = symbolTable.varType(id);
+        if( !type.equals("Boolean")){
+            throw new RuntimeException("La variable declarada es de tipo " + type + " , se espera tipo Boolean");
+        }
+        ptrEqExprsAux4 = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja(id), ArbolSintactico.crearHoja("@eqExprRes"));
+        ptrEqExpr = ArbolSintactico.crearNodo("EqualExpr", ptrExprList, ptrEqExprsAux4);
     :};
 
 // ---- Lista de expresiones ----
 expr_list ::= expr:e
     {:
         System.out.println("[RULE] expr_list -> expr");
+        ptrEqExprsAux1 = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja("@eqExprsVal"), ptrE);
+        ptrEqExprsAux2 = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja("@eqExprsRes"), ArbolSintactico.crearHoja(1));
+        ptrExprList = ArbolSintactico.crearNodo("I", ptrEqExprsAux1, ptrEqExprsAux2);
     :}
     | expr_list:l COMMA expr:e
     {:
         System.out.println("[RULE] expr_list -> expr_list, expr");
+        ptrCond = ArbolSintactico.crearNodo("!=", ptrE, ArbolSintactico.crearHoja("@eqExprsVal"));
+        ptrThen = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja("@eqExpresRes"), ArbolSintactico.crearHoja(0));
+        ptrEqExprsAux3 = ArbolSintactico.crearNodo("IF", ptrCond, ptrThen);
+        ptrExprList = ArbolSintactico.crearNodo("E", ptrExprList, ptrEqExprsAux3);
     :};
 
 // ---- TriangleAreaMaximum ----
-triangleareamaximum ::= IDENTIFIER ASSIG TRIANG_AREA_MAX OPEN_BRACKET triangle SEMICOLON triangle CLOSE_BRACKET
-                       {: System.out.println("[RULE] triangleareamaximum -> IDENTIFIER = triangleAreaMaximum( triangle ; triangle )"); :} ;
+triangleareamaximum ::= IDENTIFIER:id ASSIG TRIANG_AREA_MAX OPEN_BRACKET triangle {: ptrAreaAux = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja("@areaAux"), ArbolSintactico.crearHoja("@area")); ptrAreaAux1 = ptrArea; :} SEMICOLON triangle CLOSE_BRACKET
+                       {: System.out.println("[RULE] triangleareamaximum -> IDENTIFIER = triangleAreaMaximum( triangle ; triangle )");
+                          if(!symbolTable.findVariable(id)){
+                              throw new RuntimeException("La variable " + id.toString() + " no se encuentra declarada");
+                          }
+                          String type;
+                          type = symbolTable.varType(id);
+                          if(!type.equals("Float")){
+                              throw new RuntimeException("La variable declarada es de tipo " + type + " , se espera tipo Float");
+                          }
+                          ptrCondicion = ArbolSintactico.crearNodo(">=", ArbolSintactico.crearHoja("@areaAux"), ArbolSintactico.crearHoja("@area"));
+                          ptrThen = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja(id), ArbolSintactico.crearHoja("@areaAux"));
+                          ptrFalse = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja(id), ArbolSintactico.crearHoja("@area"));
+
+                          ptrCuerpo = ArbolSintactico.crearNodo("Cuerpo", ptrThen, ptrFalse);
+                          ptrMaximumArea = ArbolSintactico.crearNodo("IF", ptrCondicion, ptrCuerpo);
+                          ptrAr = ArbolSintactico.crearNodo("Ar", ptrAreaAux1, ptrAreaAux);
+                          ptrAr2 = ArbolSintactico.crearNodo("Ar", ptrAr, ptrArea);
+                          ptrTriArMax = ArbolSintactico.crearNodo("TriangleAreaMaximum", ptrAr2, ptrMaximumArea);
+                       :} ;
 
 // ---- Triángulo (definido por 3 coordenadas) ----
 triangle ::= OPEN_SQUARE_BRACKET coord_list CLOSE_SQUARE_BRACKET
             {: System.out.println("[RULE] triangle -> [ coord_list ]"); :} ;
 
 // ---- Lista de coordenadas (3 coordenadas para un triángulo) ----
-coord_list ::= coordinate SEMICOLON coordinate SEMICOLON coordinate
-              {: System.out.println("[RULE] coord_list -> coordinate; coordinate; coordinate"); :};
-
-// ---- Coordenada (x,y) ----
-coordinate ::= expr COMMA expr
-              {: System.out.println("[RULE] coordinate -> expr , expr"); :} ;
-
+coord_list ::= expr {: x1 = ptrE; :} COMMA expr {: y1 = ptrE; :} SEMICOLON expr {: x2 = ptrE; :} COMMA expr {: y2 = ptrE; :} SEMICOLON expr {: x3 = ptrE; :} COMMA expr {: y3 = ptrE; :}
+              {: System.out.println("[RULE] coord_list -> expr, expr; expr, expr; expr, expr");
+                 ptrX2MenosX1 = ArbolSintactico.crearNodo("-", x2, x1);
+                 ptrY3MenosY1 = ArbolSintactico.crearNodo("-", y3, y1);
+                 ptrMult1 = ArbolSintactico.crearNodo("*", ptrX2MenosX1, ptrY3MenosY1);
+                 ptrX3MenosX1 = ArbolSintactico.crearNodo("-", x3, x1);
+                 ptrY2MenosY1 = ArbolSintactico.crearNodo("-", y2, y1);
+                 ptrMult2 = ArbolSintactico.crearNodo("*", ptrX3MenosX1, ptrY2MenosY1);
+                 ptrResta = ArbolSintactico.crearNodo("-", ptrMult1, ptrMult2);
+                 ptrDiv = ArbolSintactico.crearNodo("/", ptrResta, ArbolSintactico.crearHoja("2"));
+                 ptrArea = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja("@area"), ptrDiv);
+              :};
 
 // ---- Asignaciones ----
 assignment ::= IDENTIFIER:id ASSIG expr
                 {:  System.out.println("[RULE] assignment -> IDENTIFIER = expr");
                     if(! symbolTable.findVariable(id)){
-                        System.out.println("La variable " + id.toString() + " no se encuentra delcarada"); //Cambiar a excepcion
+                        throw new RuntimeException("La variable " + id.toString() + " no se encuentra declarada");
                     }
                     ptrA = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja(id), ptrE);
-                :} ;
+                :}
+                | IDENTIFIER:id ASSIG TRUE{:
+                    System.out.println("[RULE] assignment -> IDENTIFIER = TRUE");
+                    String type;
+                    type = symbolTable.varType(id);
+                    if(!type.equals("Boolean")){
+                        throw new RuntimeException("La variable declarada es de tipo " + type + " , se espera tipo Boolean");
+                    }
+                    ptrA = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja(id), ArbolSintactico.crearHoja(1));
+                :}
+                |
+                IDENTIFIER:id ASSIG FALSE{:
+                    System.out.println("[RULE] assignment -> IDENTIFIER = FALSE");
+                    String type;
+                    type = symbolTable.varType(id);
+                    if(!type.equals("Boolean")){
+                        throw new RuntimeException("La variable declarada es de tipo " + type + " , se espera tipo Boolean");
+                    }
+                    ptrA = ArbolSintactico.crearNodo("=", ArbolSintactico.crearHoja(id), ArbolSintactico.crearHoja(0));
+                :};
 
 // ---- Contion ----
 condition ::= simple_condition
@@ -214,7 +333,7 @@ condition ::= simple_condition
               :}
             | NOT simple_condition
               {: System.out.println("[RULE] condition -> NOT simple_condition");
-                 ptrC = ArbolSintactico.crearNodo("NC", ArbolSintactico.crearHoja("NOT"), ptrSC); //NC = Nodo dummy
+                 ptrC = ArbolSintactico.crearNodo("NOT", ptrSC);
               :};
 
 simple_condition ::= expr {: ptrEAux = ptrE; :} GREATER_THAN expr
@@ -236,9 +355,12 @@ simple_condition ::= expr {: ptrEAux = ptrE; :} GREATER_THAN expr
                    | expr {: ptrEAux = ptrE; :} DOBLE_EQUAL expr
                      {: System.out.println("[RULE] simple_condition -> expr == expr");
                         ptrSC = ArbolSintactico.crearNodo("==", ptrEAux, ptrE);
+                     :}
+                   | expr {: ptrEAux = ptrE; :} NOT_EQUAL expr
+                     {:
+                        System.out.println("[RULE] simple_condition -> expr != expr");
+                        ptrSC = ArbolSintactico.crearNodo("!=", ptrEAux, ptrE);
                      :};
-
-
 
 // ---- Expresiones ----
 expr ::= expr {: pilaE.push(ptrE); :} PLUS term
@@ -275,11 +397,11 @@ term ::= term {: pilaT.push(ptrT); :} MULT unary_expr
 // ---- Expresiones unarias ----
 unary_expr ::= SUB factor
              {: System.out.println("[RULE] unary_expr -> - factor");
-                ptrU = ArbolSintactico.crearNodo("U", ArbolSintactico.crearHoja("-"), ptrF); //U = Nodo Dummy
+                ptrU = ArbolSintactico.crearNodo("-", ptrF);
              :} %prec UMINUS
              | PLUS factor
              {: System.out.println("[RULE] unary_expr -> + factor");
-               ptrU = ArbolSintactico.crearNodo("U", ArbolSintactico.crearHoja("+"), ptrF);
+               ptrU = ArbolSintactico.crearNodo("+", ptrF);
              :} %prec UMINUS
              | factor
              {: System.out.println("[RULE] unary_expr -> factor");
@@ -289,7 +411,7 @@ unary_expr ::= SUB factor
 // ---- Factores ----
 factor ::= INTEGER_CONSTANT:cte
          {: System.out.println("[RULE] factor -> INTEGER_CONSTANT");
-            symbolTable.addConstant(cte, cte, "int");
+            symbolTable.addConstant(cte, cte, "Int");
             ptrF = ArbolSintactico.crearHoja(cte);
          :}
          | IDENTIFIER:id
@@ -301,12 +423,12 @@ factor ::= INTEGER_CONSTANT:cte
          :}
          | FLOAT_CONSTANT:cte
          {: System.out.println("[RULE] factor -> FLOAT_CONSTANT");
-           symbolTable.addConstant(cte, cte, "float");
+           symbolTable.addConstant(cte, cte, "Float");
            ptrF = ArbolSintactico.crearHoja(cte);
          :}
          | STRING_CONSTANT:cte
          {: System.out.println("[RULE] factor -> STRING_CONSTANT");
-           symbolTable.addConstant(cte, cte, "string");
+           symbolTable.addConstant(cte, cte, "String");
            ptrF = ArbolSintactico.crearHoja(cte);
          :}
          | OPEN_BRACKET expr CLOSE_BRACKET:exp
@@ -316,14 +438,14 @@ factor ::= INTEGER_CONSTANT:cte
 
 // ---- Tipos ----
 type ::= INT             {: System.out.println("[RULE] type -> INT");
-                               RESULT = "int";
+                               RESULT = "Int";
                          :}
        | BOOLEAN         {: System.out.println("[RULE] type -> BOOLEAN");
-                               RESULT = "boolean";
+                               RESULT = "Boolean";
                          :}
        | FLOAT           {: System.out.println("[RULE] type -> FLOAT");
-                               RESULT = "float";
+                               RESULT = "Float";
                          :}
        | STRING          {: System.out.println("[RULE] type -> STRING");
-                               RESULT = "string";
+                               RESULT = "String";
                          :};

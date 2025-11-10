@@ -70,6 +70,23 @@
                                     <executable>./run.${script.extension}</executable>
                                 </configuration>
                             </execution>
+                            <!-- 🚀 Nuevo bloque: genera la imagen del árbol con Graphviz -->
+                            <execution>
+                                <id>generate-dot-image</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>dot</executable>
+                                    <arguments>
+                                        <argument>-Tpng</argument>
+                                        <argument>-o</argument>
+                                        <argument>${project.basedir}/target/output/arbol.png</argument>
+                                        <argument>${project.basedir}/target/output/intermediate-code.dot</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                 </plugins>
